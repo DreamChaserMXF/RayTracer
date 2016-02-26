@@ -79,8 +79,12 @@
     <ClCompile Include="RayTracer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Lighting.h" />
+    <ClInclude Include="Material.h" />
     <ClInclude Include="Math.hpp" />
     <ClInclude Include="Matrix.hpp" />
+    <ClInclude Include="Primitive.h" />
+    <ClInclude Include="Transform.hpp" />
     <ClInclude Include="Vector.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

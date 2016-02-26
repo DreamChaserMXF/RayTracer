@@ -4,9 +4,11 @@
 #include <list>
 #include <stack>
 #include <FreeImage.h>
+#include "Primitive.h"
+#include "Material.h"
 #include "Vector.hpp"
 #include "Matrix.hpp"
-
+#include "Transform.hpp"
 using xf::Matrix;
 using xf::Vector;
 
@@ -35,20 +37,8 @@ int G_CAM_UP_Y = 0;
 int G_CAM_UP_Z = 0;
 double G_FIELD_OF_VIEW = 0;
 
-struct Sphere
-{
-	int x;
-	int y;
-	int z;
-	int radius;
-};
-struct Triangle
-{
-	int x;
-	int y;
-	int z;
-};
 
+Material G_MATERIAL;
 list<Sphere> G_SPHERE_LIST;
 list<Triangle> G_TRIANGLE_LIST;
 stack<Matrix<double>> G_MODELVIEWMATRIX_STACK;
@@ -82,7 +72,6 @@ void ContentParse(const string &scene_file)
 		buffer >> command;
 		if("size" == command)
 		{
-			//cout << line << endl;
 			buffer >> G_WIDTH >> G_HEIGHT;
 		}
 		else if("maxdepth" == command)
@@ -95,7 +84,6 @@ void ContentParse(const string &scene_file)
 		}
 		else if("camera" == command)
 		{
-			//cout << line << endl;
 			buffer >> G_CAM_LOOKFROM_X >> G_CAM_LOOKFROM_Y >> G_CAM_LOOKFROM_Z
 				   >> G_CAM_LOOKAT_X   >> G_CAM_LOOKAT_Y   >> G_CAM_LOOKAT_Z
 				   >> G_CAM_UP_X       >> G_CAM_UP_Y       >> G_CAM_UP_Z
@@ -104,12 +92,12 @@ void ContentParse(const string &scene_file)
 		else if("sphere" == command)
 		{
 			buffer >> sphere.x >> sphere.y >> sphere.z >> sphere.radius;
-			// TODO save transformed sphere
+			G_SPHERE_LIST.push_back(Transform(G_CUR_TRANSFORM_MATRIX, sphere));
 		}
 		else if("tri" == command)
 		{
 			buffer >> triangle.x >> triangle.y >> triangle.z;
-			// TODO save transformed triangle
+			G_TRIANGLE_LIST.push_back(Transform(G_CUR_TRANSFORM_MATRIX, triangle));
 		}
 		else if("vertex" == command)
 		{
@@ -123,7 +111,6 @@ void ContentParse(const string &scene_file)
 			cout << "translation" << endl;
 			cout << translate_mat;
 			G_CUR_TRANSFORM_MATRIX = G_CUR_TRANSFORM_MATRIX * translate_mat;
-			//G_MODELVIEWMATRIX_STACK.push(translate_mat);
 		}
 		else if("rotate" == command)
 		{
@@ -134,7 +121,6 @@ void ContentParse(const string &scene_file)
 			cout << "rotation" << endl;
 			cout << rotation_mat;
 			G_CUR_TRANSFORM_MATRIX = G_CUR_TRANSFORM_MATRIX * rotation_mat;
-			//G_MODELVIEWMATRIX_STACK.push(translate_mat);
 		}
 		else if("scale" == command)
 		{
@@ -174,19 +160,19 @@ void ContentParse(const string &scene_file)
 		}
 		else if("diffuse" == command)
 		{
-			
+			buffer >> G_MATERIAL.diffuse.r_ >> G_MATERIAL.diffuse.g_ >> G_MATERIAL.diffuse.b_;
 		}
 		else if("specular" == command)
 		{
-			
+			buffer >> G_MATERIAL.specular.r_ >> G_MATERIAL.specular.g_ >> G_MATERIAL.specular.b_;
 		}
 		else if("shininess" == command)
 		{
-			
+			buffer >> G_MATERIAL.shininess;
 		}
 		else if("emission" == command)
 		{
-			
+			buffer >> G_MATERIAL.emission.r_ >> G_MATERIAL.emission.g_ >> G_MATERIAL.emission.b_;
 		}
 		else if("maxverts" == command)
 		{
@@ -196,10 +182,6 @@ void ContentParse(const string &scene_file)
 		{
 		
 		}
-		//else if("maxverts" == command)
-		//{
-		//
-		//}
 		else
 		{
 			cout << "havn't handle this: " << line << endl;
@@ -211,7 +193,22 @@ void ContentParse(const string &scene_file)
 	cout << "camera look from:     " << G_CAM_LOOKFROM_X << ", " << G_CAM_LOOKFROM_Y << ", " << G_CAM_LOOKFROM_Z << endl
 		 << "camera look at:       " << G_CAM_LOOKAT_X   << ", " << G_CAM_LOOKAT_Y   << ", " << G_CAM_LOOKAT_Z << endl
 		 << "camera up direction:  " << G_CAM_UP_X       << ", " << G_CAM_UP_Y       << ", " << G_CAM_UP_Z << endl
-		 << "camera field of view: " << G_FIELD_OF_VIEW << endl;
+		 << "camera field of view: " << G_FIELD_OF_VIEW << endl
+		 << "material:" << endl
+		 << "diffuse: " << G_MATERIAL.diffuse.r_ << ", " << G_MATERIAL.diffuse.g_ << ", " << G_MATERIAL.diffuse.b_ << endl
+		 << "specular: " << G_MATERIAL.specular.r_ << ", " << G_MATERIAL.specular.g_ << ", " << G_MATERIAL.specular.b_ << endl
+		 << "shininess: " << G_MATERIAL.shininess << endl
+		 << "emission: " << G_MATERIAL.emission.r_ << ", " << G_MATERIAL.emission.g_ << ", " << G_MATERIAL.emission.b_ << endl;
+	for(list<Sphere>::const_iterator c_iter = G_SPHERE_LIST.begin();
+		c_iter != G_SPHERE_LIST.end(); ++c_iter)
+	{
+		cout << c_iter->x << ", " << c_iter->y << ", " << c_iter->z << ", " << c_iter->radius << endl;
+	}
+	for(list<Triangle>::const_iterator c_iter = G_TRIANGLE_LIST.begin();
+		c_iter != G_TRIANGLE_LIST.end(); ++c_iter)
+	{
+		cout << c_iter->x << ", " << c_iter->y << ", " << c_iter->z << endl;
+	}
 }
 
 int main()

@@ -10,6 +10,8 @@ namespace xf
 	{
 		return degrees / 180.0 * G_PI;
 	}
+
+
 }
 
 #endif
