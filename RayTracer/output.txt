@@ -1,0 +1,38 @@
+widht = 320	height = 240
+max depth = 5
+result file name:     
+camera look from:     0, 0, 4
+camera look at:       0, 0, 0
+camera up direction:  0, 1, 0
+camera field of view: 30
+point light: 
+	position: (4, 0, 4) 	color: (0.5, 0.5, 0.5)
+directional light: 
+	direction: (0, 0, 1) 	color: (0.5, 0.5, 0.5)
+Attenuation: 1, 0, 0
+Sphere: 
+Triangle: 
+0: (-1, -1, 0), (1, -1, 0), (1, 1, 0), 
+ambient: 0.1, 0.1, 0.1
+material:
+	diffuse_: 1, 0, 0
+	specular_: 0, 0, 0
+	shininess_: 0
+	emission_: 0, 0, 0
+1: (-1, -1, 0), (1, 1, 0), (-1, 1, 0), 
+ambient: 0.1, 0.1, 0.1
+material:
+	diffuse_: 1, 0, 0
+	specular_: 0, 0, 0
+	shininess_: 0
+	emission_: 0, 0, 0
+-1  0  0  0  
+0  1  0  0  
+0  0  -1  4  
+0  0  0  1  
+
+-1  0  0  0  
+0  1  0  0  
+0  0  -1  4  
+0  0  0  1  
+

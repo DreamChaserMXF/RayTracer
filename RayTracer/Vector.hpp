@@ -6,72 +6,105 @@
 namespace xf
 {
 
-	template<class T>
 	class Vector
 	{
 	public:
-		Vector() : x_(0), y_(0), z_(0), w_(0)
+		Vector() : x_(0), y_(0), z_(0)
 		{
 			;
 		}
-		Vector(const T &x, const T &y, const T &z) : x_(x), y_(y), z_(z), w_(1)
-		{
-			;
-		}
-		template<class OtherType>
-		Vector(const Vector<OtherType> &_Right) : x_(_Right.x_), y_(_Right.y_), z_(_Right.z_), w_(_Right.w_)
+		Vector(double x_, double y_, double z_) : x_(x_), y_(y_), z_(z_)
 		{
 			;
 		}
 
-		Vector<T>& Normalize() throw(std::bad_cast)
+		double Length() const throw()
 		{
-			if(0 == x_ + y_ + z_)
+			return sqrt(x_ * x_ + y_ * y_ + z_ * z_);
+		}
+
+		Vector& Normalize() throw(std::bad_cast)
+		{
+			double length = Length();
+			if(length < std::numeric_limits<double>::min())
 			{
 				throw(std::bad_cast("cannot normalize zero vector"));
 			}
-			T sum = x_ + y_ + z_;
-			x_ /= sum;
-			y_ /= sum;
-			z_ /= sum;
+			x_ /= length;
+			y_ /= length;
+			z_ /= length;
 			return *this;
 		}
 
 
-		Vector<T>& Homogeneous() throw(std::bad_cast)
+		//Vector& Homogeneous() throw(std::bad_cast)
+		//{
+		//	if(0 == w_)
+		//	{
+		//		throw(std::bad_cast("cannot get hemogeneous vector with w = 0"))
+		//	}
+		//	x_ /= w_;
+		//	y_ /= w_;
+		//	z_ /= w_;
+		//	return *this;
+		//}
+		union{
+		double  x_;
+		double  r_;
+		};
+		union{
+		double  y_;
+		double  g_;
+		};
+		union{
+		double  z_;
+		double  b_;
+		};
+
+		Vector& operator += (const Vector &_Right)
 		{
-			if(0 == w_)
-			{
-				throw(std::bad_cast("cannot get hemogeneous vector with w = 0"))
-			}
-			x_ /= w_;
-			y_ /= w_;
-			z_ /= w_;
+			x_ += _Right.x_;
+			y_ += _Right.y_;
+			z_ += _Right.z_;
 			return *this;
 		}
-		union{
-		T x_;
-		T r_;
-		};
-		union{
-		T y_;
-		T g_;
-		};
-		union{
-		T z_;
-		T b_;
-		};
-		union{
-		T w_;
-		T a_;
-		};
-		//T y_;
-		//T z_;
-		//T w_;
+		Vector operator + (const Vector &_Right) const
+		{
+			Vector retVector = *this;
+			retVector += _Right;
+			return retVector;
+		}
+		Vector& operator -= (const Vector &_Right)
+		{
+			x_ -= _Right.x_;
+			y_ -= _Right.y_;
+			z_ -= _Right.z_;
+			return *this;
+		}
+		Vector operator - (const Vector &_Right) const
+		{
+			Vector retVector = *this;
+			retVector -= _Right;
+			return retVector;
+		}
+
+		Vector operator + () const throw()
+		{
+			return Vector(*this);
+		}
+		Vector operator - () const throw()
+		{
+			return Vector(-x_, -y_, -z_);
+		}
+		double operator *(const Vector &_Right) const
+		{
+			return x_ * _Right.x_
+				 + y_ * _Right.y_
+				 + z_ * _Right.z_;
+		}
 	};
 
-	template<class T1, class T2>
-	Vector<T2> operator *(T1 factor, Vector<T2> vec)
+	static Vector& operator *=(Vector &vec, double factor)
 	{
 		vec.x_ *= factor;
 		vec.y_ *= factor;
@@ -79,8 +112,15 @@ namespace xf
 		return vec;
 	}
 
-	template<class T1, class T2>
-	Vector<T1> operator *(Vector<T1> vec, T2 factor)
+	static Vector operator *(double factor, Vector vec)
+	{
+		vec.x_ *= factor;
+		vec.y_ *= factor;
+		vec.z_ *= factor;
+		return vec;
+	}
+
+	static Vector operator *(Vector vec, double factor)
 	{
 		vec.x_ *= factor;
 		vec.y_ *= factor;

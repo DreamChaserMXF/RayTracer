@@ -10,12 +10,11 @@
 
 namespace xf
 {
-
-	template<class T>
+	const double EPS = 1e-4;
 	class Matrix
 	{
 	public:
-		Matrix(int dimension) : row_(dimension), column_(dimension), data_(new T[dimension * dimension])
+		Matrix(int dimension) throw(std::bad_alloc) : row_(dimension), column_(dimension), data_(new double [dimension * dimension])
 		{
 			for(int i = 0; i < dimension; ++i)
 			{
@@ -25,7 +24,7 @@ namespace xf
 				}
 			}
 		}
-		Matrix(int row, int column) throw(std::bad_alloc) : row_(row), column_(column), data_(new T[row * column])
+		Matrix(int row, int column) throw(std::bad_alloc) : row_(row), column_(column), data_(new double [row * column])
 		{
 			for(int i = 0; i < row; ++i)
 			{
@@ -35,8 +34,8 @@ namespace xf
 				}
 			}
 		}
-		template<class OtherType>
-		Matrix(int row, int column, OtherType *data) throw(std::bad_alloc) : row_(row), column_(column), data_(new T[row * column])
+		template<class T>
+		Matrix(int row, int column, T *data) throw(std::bad_alloc) : row_(row), column_(column), data_(new double [row * column])
 		{
 			for(int i = 0; i < row; ++i)
 			{
@@ -46,7 +45,7 @@ namespace xf
 				}
 			}
 		}
-		Matrix(const Matrix<T> &_Right) throw(std::bad_alloc) : row_(_Right.row_), column_(_Right.column_), data_(new T[_Right.row_ * _Right.column_])
+		Matrix(const Matrix &_Right) throw(std::bad_alloc) : row_(_Right.row_), column_(_Right.column_), data_(new double [_Right.row_ * _Right.column_])
 		{
 			for(int i = 0; i < row_; ++i)
 			{
@@ -56,18 +55,6 @@ namespace xf
 				}
 			}
 		}
-		template<class OtherType>
-		Matrix(const Matrix<OtherType> &_Right) throw(std::bad_alloc) : row_(_Right.row_), column_(_Right.column_), data_(new T[_Right.row_ * _Right.column_])
-		{
-			for(int i = 0; i < row; ++i)
-			{
-				for(int j = 0; j < column; ++j)
-				{
-					data_[i * column + j] = _Right.data_[i * column + j];
-				}
-			}
-		}
-
 		
 
 		~Matrix()
@@ -75,46 +62,136 @@ namespace xf
 			delete[] data_;
 		}
 
-		Matrix<T>& Tranpose()
+		Matrix Tranpose() const throw(std::bad_alloc)
 		{
-			if(row_ == column_)
+			double  *new_data = new double[row_ * column_];
+			for(int i = 0; i < row_; ++i)
 			{
-				for(int i = 0; i < row_; ++i)
+				for(int j = 0; j < column_; ++j)
 				{
-					for(int j = 0; j < i; ++j)
-					{
-						T tmp = data_[i * column + j];
-						data_[i * column + j] = data_[j * column + i];
-						data_[j * column + i] = tmp;
-					}
+					new_data[i * column_ + j] = data_[j * column_ + i];
 				}
 			}
-			else
-			{
-				T *new_data = new T[row_ * column_];
-				for(int i = 0; i < row_; ++i)
-				{
-					for(int j = 0; j < column_; ++j)
-					{
-						new_data_[i * column + j] = data_[j * column + i];
-					}
-				}
-				int tmp = row_;
-				row_ = column_;
-				column_ = tmp;
-				delete[] data_;
-				data_ = new_data;
-			}
-			return *this;
+			Matrix ret_mat(column_, row_, new_data);
+			return ret_mat;
 		}
 
-		Matrix<T> ToHomogeneousMatrix() const throw(std::bad_alloc, std::bad_cast)
+		// 对第row_num行进行放缩
+		void ScaleRow(int row_num, double scale)
+		{
+			for(int j = 0; j < column_; ++j)
+			{
+				data_[row_num * column_ + j] *= scale;
+			}
+		}
+
+		// 交换第i j行
+		void ExchangeRow(int i, int j)
+		{
+			assert(i < row_ && j < row_);
+			for(int k = 0; k < column_; ++k)
+			{
+				double tmp = data_[i * column_ + k];
+				data_[i * column_ + k] = data_[j * column_ + k];
+				data_[j * column_ + k] = tmp;
+			}
+		}
+
+		// row[i] += row[j] * factor
+		void AddRow(int i, int j, double factor)
+		{
+			assert(i < row_ && j < row_);
+			for(int k = 0; k < column_; ++k)
+			{
+				data_[i * column_ + k] += data_[j * column_ + k] * factor;
+			}
+		}
+
+		// 高斯-若当消元法求逆矩阵
+		Matrix Inverse() const throw(std::bad_alloc, std::runtime_error)
+		{
+			if(row_ != column_)
+			{
+				throw std::exception("cannot inverse a matrix which is not square");
+			}
+			// 建立增广矩阵
+			Matrix augmented_mat(row_, column_ * 2);
+			for(int i = 0; i < row_; ++i)
+			{
+				for(int j = 0; j < column_; ++j)
+				{
+					augmented_mat.data_[i * augmented_mat.column_ + j] = data_[i * column_ + j];
+				}
+				for(int j = 0; j < column_; ++j)
+				{
+					augmented_mat.data_[i * augmented_mat.column_ + column_ + j] = (i == j ? 1 : 0);
+				}
+			}
+			//for(int i = 0; i < augmented_mat.row_; ++i)
+			//{
+			//	for(int j = 0; j < augmented_mat.column_; ++j)
+			//	{
+			//		std::cout << augmented_mat.data_[i * column_ * 2 + j] << "  ";
+			//	}
+			//	std::cout << '\n';
+			//}
+			//std::cout << std::endl;
+			// 进行高斯-若当消元法
+			for(int i = 0; i < row_; ++i)
+			{
+				// 找到主元
+				if(abs(augmented_mat.data_[i * augmented_mat.column_ + i]) <= EPS)
+				{
+					int j = i + 1;
+					while(j < row_)
+					{
+						if(abs(augmented_mat.data_[i * augmented_mat.column_ + j]) > EPS)
+						{
+							break;
+						}
+						++j;
+					}
+					if(j == row_)	// 矩阵为奇异矩阵
+					{
+						throw std::runtime_error("singular matrix cannot be inversed");
+					}
+					// 交换第i列和第j列
+					augmented_mat.ExchangeRow(i, j);
+				}
+				// 主元归一
+				double pivot_value = augmented_mat.data_[i * augmented_mat.column_ + i];
+				augmented_mat.ScaleRow(i, 1 / pivot_value);
+				// 消去主元所在列的其他位置的元素
+				for(int j = 0; j < row_; ++j)
+				{
+					if(j != i && abs(augmented_mat.data_[j * augmented_mat.column_ + i]) > std::numeric_limits<double>::min())
+					{
+						// 用第i行，消去第j行第i列的元素
+						augmented_mat.AddRow(j, i, -augmented_mat.data_[j * augmented_mat.column_ + i]);
+					}
+				}
+			}
+			// 分离增广矩阵的右半边
+			Matrix inverse_mat(row_, column_);
+			for(int i = 0; i < row_; ++i)
+			{
+				for(int j = 0; j < column_; ++j)
+				{
+					inverse_mat.data_[i * column_ + j] = augmented_mat.data_[i * column_ * 2 + column_ + j];
+				}
+			}
+			return inverse_mat;
+		}
+
+		
+
+		Matrix GetHomogeneousMatrix() const throw(std::bad_alloc, std::bad_cast)
 		{
 			if(3 != row_ || 3 != column_)
 			{
 				throw std::bad_cast("only can get homogeneous matrix from 3*3 matrix");
 			}
-			Matrix<T> ret_mat(4, 4);
+			Matrix ret_mat(4, 4);
 			for(int i = 0; i < 3; ++i)
 			{
 				for(int j = 0; j < 3; ++j)
@@ -126,7 +203,7 @@ namespace xf
 			return ret_mat;
 		}
 
-		Matrix<T>& operator = (const Matrix<T> &_Right) throw(std::exception)
+		Matrix& operator = (const Matrix &_Right) throw(std::exception)
 		{
 			if(this != &_Right)
 			{
@@ -146,29 +223,9 @@ namespace xf
 			return *this;
 		}
 
-		template<class OtherType>
-		Matrix<T>& operator = (const Matrix<OtherType> &_Right) throw(std::exception)
-		{
-			if(this != &_Right)
-			{
-				if(row_ != _Right.row_
-					|| column_ != _Right.column_)
-				{
-					throw std::exception("matrix size not match");
-				}
-				for(int i = 0; i < row_; ++i)
-				{
-					for(int j = 0; j < column_; ++j)
-					{
-						data_[i * column_ + j] = _Right.data_[i * column_ + j];
-					}
-				}
-			}
-			return *this;
-		}
+		
 
-		template<class OtherType>
-		Matrix<T>& operator += (const Matrix<OtherType> &_Right) throw(std::exception)
+		Matrix& operator += (const Matrix &_Right) throw(std::exception)
 		{
 			if(row_ != _Right.row_
 				|| column_ != _Right.column_)
@@ -184,15 +241,13 @@ namespace xf
 			}	
 			return *this;
 		}
-		template<class OtherType>
-		Matrix<T> operator + (const Matrix<OtherType> &_Right) throw(std::exception)
+		Matrix operator + (const Matrix &_Right) const throw(std::exception)
 		{
 			Matrix ret_mat(*this);
 			return ret_mat += _Right;
 		}
 
-		template<class OtherType>
-		Matrix<T>& operator -= (const Matrix<OtherType> &_Right) throw(std::exception)
+		Matrix& operator -= (const Matrix &_Right) throw(std::exception)
 		{
 			if(row_ != _Right.row_
 				|| column_ != _Right.column_)
@@ -203,31 +258,29 @@ namespace xf
 			{
 				for(int j = 0; j < column_; ++j)
 				{
-					data_[i * column + j] -= _Right.data_[i * column + j];
+					data_[i * column_ + j] -= _Right.data_[i * column_ + j];
 				}
 			}
 			return *this;
 		}
-		template<class OtherType>
-		Matrix<T> operator - (const Matrix<OtherType> &_Right) throw(std::exception)
+		Matrix operator - (const Matrix &_Right) const throw(std::exception)
 		{
 			Matrix ret_mat(*this);
 			return ret_mat -= _Right;
 		}
 
-		template<class OtherType>
-		Matrix<T> operator * (const Matrix<OtherType> &_Right) throw(std::exception)
+		Matrix operator * (const Matrix &_Right) const throw(std::exception)
 		{
 			if(column_ != _Right.row_)
 			{
 				throw std::exception("matrix size not match");
 			}
-			Matrix<T> ret_mat(row_, _Right.column_);
+			Matrix ret_mat(row_, _Right.column_);
 			for(int i = 0; i < row_; ++i)
 			{
 				for(int j = 0; j < _Right.column_; ++j)
 				{
-					T sum = 0;
+					double  sum = 0;
 					for(int k = 0; k < column_; ++k)
 					{
 						sum += data_[i * column_ + k] * _Right.data_[k * _Right.column_ + j];
@@ -238,96 +291,34 @@ namespace xf
 			return ret_mat;
 		}
 
-		T* operator [](int n) const throw()
+		Vector operator * (const Vector &_Right) const
+		{
+			Vector ret_vec( _Right.x_ * data_[0 * column_ + 0] + _Right.y_ * data_[0 * column_ + 1] + _Right.z_ * data_[0 * column_ + 2] + data_[0 * column_ + 3],
+							_Right.x_ * data_[1 * column_ + 0] + _Right.y_ * data_[1 * column_ + 1] + _Right.z_ * data_[1 * column_ + 2] + data_[1 * column_ + 3],
+							_Right.x_ * data_[2 * column_ + 0] + _Right.y_ * data_[2 * column_ + 1] + _Right.z_ * data_[2 * column_ + 2] + data_[2 * column_ + 3]);
+			double homogeneous_ratio = _Right.x_ * data_[3 * column_ + 0] + _Right.y_ * data_[3 * column_ + 1] + _Right.z_ * data_[3 * column_ + 2] + data_[3 * column_ + 3];
+			if(abs(homogeneous_ratio - 1.0) > std::numeric_limits<double>::min())
+			{
+				assert(abs(homogeneous_ratio) > std::numeric_limits<double>::min());
+				ret_vec.x_ /= homogeneous_ratio;
+				ret_vec.y_ /= homogeneous_ratio;
+				ret_vec.z_ /= homogeneous_ratio;
+			}
+			return ret_vec;
+		}
+
+		double* operator [](int n) const throw()
 		{
 			return data_ + n * column_;
 		}
 
-
-
-		static Matrix<T> IdentityMatrix(int dimension)
-		{
-			Matrix<T> ret_mat(dimension);
-			for(int i = 0; i < ret_mat.row_; ++i)
-			{
-				ret_mat.data_[i * ret_mat.column_ + i] = 1;
-			}
-			return ret_mat;
-		}
-
-		template<class OtherType>
-		static Matrix<T> TranslateMatrix(const Vector<OtherType> &translate_vector)
-		{
-			Matrix<T> ret_mat = IdentityMatrix(4);
-			ret_mat[0][3] = translate_vector.x_;
-			ret_mat[1][3] = translate_vector.y_;
-			ret_mat[2][3] = translate_vector.z_;
-			return ret_mat;
-		}
-
-		template<class OtherType>
-		static Matrix<T> ScaleMatrix(const Vector<OtherType> &scale_vector)
-		{
-			Matrix<T> ret_mat(4);
-			ret_mat[0][0] = scale_vector.x_;
-			ret_mat[1][1] = scale_vector.y_;
-			ret_mat[2][2] = scale_vector.z_;
-			ret_mat[3][3] = 1;
-			return ret_mat;
-		}
-
-		static Matrix<T> RotationMatrix(const Vector<T> vec, double degrees)
-		{
-			//Matrix<T> ret_mat(3, 3);
-			Vector<T> direction = vec;
-			direction.Normalize();
-			T data1[9] = {
-				direction.x_ * direction.x_, direction.x_ * direction.y_, direction.x_ * direction.z_,
-				direction.y_ * direction.x_, direction.y_ * direction.y_, direction.y_ * direction.z_,
-				direction.z_ * direction.x_, direction.z_ * direction.y_, direction.z_ * direction.z_
-						};
-			Matrix<T> mProjection(3, 3, data1);
-			Matrix<T> mIdentity = IdentityMatrix(3);
-			T data2[9] = {
-				0.0f, -direction.z_, direction.y_,
-				direction.z_, 0.0f, -direction.x_,
-				-direction.y_, direction.x_, 0.0f
-			};	// 行主序！！
-			Matrix<T> mCross(3, 3, data2);
-			const double radians = xf::radians(degrees);
-			Matrix<T> ret_mat = (1 - cos(radians)) * mProjection + cos(radians) * mIdentity + sin(radians) * mCross;
-			return ret_mat.ToHomogeneousMatrix();
-
-			//mat3 ret;
-			//// YOUR CODE FOR HW2 HERE
-			//// Please implement this.  Likely the same as in HW 1.  
-			//vec3 base = glm::normalize(axis);
-			//mat3 mProjection(
-			//	base.x * base.x, base.y * base.x, base.z * base.x,
-			//	base.x * base.y, base.y * base.y, base.z * base.y,
-			//	base.x * base.z, base.y * base.z, base.z * base.z
-			//	);
-			//mat3 mIdentity(1.0f);
-			//mat3 mCross(
-			//	0.0f, base.z, -base.y,
-			//	-base.z, 0.0f, base.x,
-			//	base.y, -base.x, 0.0f
-			//	);	// 列主序！！
-			//const float radians = glm::radians(degrees);
-	
-			//ret = (1 - cos(radians)) * mProjection + cos(radians) * mIdentity + sin(radians) * mCross;
-			//return ret;
-		}
-
-
 		int row_;
 		int column_;
-		T *data_;
+		double  *data_;
 	};
 
 
-	template<class T1, class T2>
-	Matrix<T2> operator *(T1 factor, Matrix<T2> mat)
+	static Matrix operator *(double factor, Matrix mat)
 	{
 		for(int i = 0; i < mat.row_; ++i)
 		{
@@ -338,33 +329,19 @@ namespace xf
 		}
 		return mat;
 	}
-	template<class T1>
-	Matrix<T1> operator *(Matrix<T1> mat, double factor)
+	static Matrix operator *(Matrix mat, double factor)
 	{
 		for(int i = 0; i < mat.row_; ++i)
 		{
 			for(int j = 0; j < mat.column_; ++j)
 			{
 				mat.data_[i * mat.column_ + j] *= factor;
-			}
-		}
-		return mat;
-	}
-	template<class T1>
-	Matrix<T1> operator *(Matrix<T1> mat, int factor)
-	{
-		for(int i = 0; i < mat.row_; ++i)
-		{
-			for(int j = 0; j < mat.column_; ++j)
-			{
-				data_[i * mat.column_ + j] *= factor;
 			}
 		}
 		return mat;
 	}
 
-	template<class T>
-	std::ostream& operator << (std::ostream &out, const Matrix<T> &mat)
+	static std::ostream& operator << (std::ostream &out, const Matrix &mat)
 	{
 		for(int i = 0; i < mat.row_; ++i)
 		{

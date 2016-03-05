@@ -1,12 +1,16 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 #include "Vector.hpp"
-struct Material
+using xf::Vector;
+class Material
 {
-	xf::Vector<int> emission;
-	xf::Vector<int> diffuse;
-	int shininess;
-	xf::Vector<int> specular;
+public:
+	Material() : emission_(), diffuse_(), shininess_(0.0), specular_()
+	{}
+	Vector emission_;
+	Vector diffuse_;
+	double shininess_;
+	Vector specular_;
 };
 
 #endif

@@ -76,10 +76,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="GlobalTerm.cpp" />
+    <ClCompile Include="Parse.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="RayTracer.cpp" />
+    <ClCompile Include="SavePicture.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Lighting.h" />
+    <ClInclude Include="GlobalTerm.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Math.hpp" />
     <ClInclude Include="Matrix.hpp" />
