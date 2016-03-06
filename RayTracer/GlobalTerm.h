@@ -19,6 +19,7 @@
 
 using xf::Matrix;
 using xf::Vector;
+using std::ostream;
 using std::cout;
 using std::endl;
 using std::ends;
@@ -52,9 +53,8 @@ extern stack<Matrix> G_MODELVIEWMATRIX_STACK;
 extern Matrix G_CUR_TRANSFORM_MATRIX;
 
 
-void ContentParse(const string &scene_file);
+void ContentParse(const string &scene_file, ostream &out);
 BYTE* RayTracer();
-Vector TraceColor(const Ray &ray);
 void SavePicture(BYTE* pixels, const string &name);
 
 #endif

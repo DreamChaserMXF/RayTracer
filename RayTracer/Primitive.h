@@ -9,47 +9,7 @@ using xf::Vector;
 using xf::Matrix;
 using std::vector;
 
-// 球的半径用向量存储，因为可能会在三个维度上进行缩放
-class Sphere
-{
-public:
-	Sphere() : center_(), radius_(0.0), transform_mat_(4), ambient_(0.2, 0.2, 0.2), material_()
-	{
-		;
-	}
-	Vector center_;
-	double radius_;
-	Matrix transform_mat_;
-	Vector ambient_;
-	Material material_;
-};
-class Triangle
-{
-public:
-	Triangle() : v1_(), v2_(), v3_(), is_const_normal_(true), normal_(), ambient_(0.2, 0.2, 0.2), material_()
-	{
-		;
-	}
-	Vector v1_;
-	Vector v2_;
-	Vector v3_;
-	bool is_const_normal_;
-	Vector normal_;
-	Vector ambient_;
-	Material material_;
-};
-
-//class Polygon
-//{
-//public:
-//	Polygon() : vertices_(), ambient_(), material_()
-//	{
-//		;
-//	}
-//	vector<Vector> vertices_;
-//	Vector ambient_;
-//	Material material_;
-//};
+enum Primitive {NONE, SPHERE, TRIANGLE};
 
 class Light
 {
@@ -75,5 +35,122 @@ public:
 	double tmin_;
 	double tmax_;
 };
+
+
+// 球的半径用向量存储，因为可能会在三个维度上进行缩放
+class Sphere
+{
+public:
+	Sphere() : center_(), radius_(0.0), inv_transform_mat_(4), ambient_(0.2, 0.2, 0.2), material_(), mirror_coefficient_(0.0)
+	{
+		;
+	}
+
+	bool IntersectTest(const Ray &ray, double &t) const
+	{
+		// 把视点和方向变换回去
+		Vector origin = inv_transform_mat_ * ray.origin_;
+		Vector direction = inv_transform_mat_.TransformDirection(ray.direction_);	// 这个方向只需要变换回去就可以了，不需要归一化，否则参数t在变换前后的意义就不同了
+
+		double a = direction * direction;
+		double b = 2.0 * direction * (origin - center_);
+		Vector tmp = origin - center_;
+		double c = tmp * tmp - radius_ * radius_;
+		double delta = b * b - 4.0 * a * c;
+		if(abs(delta) < xf::EPS)	// 直线与球只有一个交点
+		{
+			// 计算交点的参数t
+			t = -b / 2.0 / a;
+			if(t >= ray.tmin_ && t <= ray.tmax_)	// 线段与球相交，且交点更近
+			{
+				return true;
+			}
+		}
+		else if(delta > 0.0)	// 有两个交点，计算出两个t来
+		{
+			// t1 < t2
+			double t1 = (-b - sqrt(delta)) / 2.0 / a;
+			double t2 = (-b + sqrt(delta)) / 2.0 / a;
+			// 如果t1符合要求
+			if(t1 >= ray.tmin_ && t1 <= ray.tmax_)
+			{
+				t = t1;
+				return true;
+			}
+			else if(t2 >= ray.tmin_ && t2 <= ray.tmax_)
+			{
+				t = t2;
+				return true;
+			}
+		}
+		return false;
+	}
+
+	Vector center_;
+	double radius_;
+	Matrix inv_transform_mat_;
+	Vector ambient_;
+	Material material_;
+	double mirror_coefficient_;
+};
+class Triangle
+{
+public:
+	Triangle() : v1_(), v2_(), v3_(), is_const_normal_(true), normal_(), ambient_(0.2, 0.2, 0.2), material_(), mirror_coefficient_(0.0)
+	{
+		;
+	}
+	bool IntersectTest(const Ray &ray, double &t) const
+	{
+		// 先判断直线的方向与三角形是否共面
+		if(abs(cos(ray.direction_, normal_)) > std::numeric_limits<double>::min())
+		{
+			// 不共面的情况
+			// 则直线一定和三角形所在的平面相交
+			// 求交点的参数t，以计算出交点是否在三角形内
+			t = ((v1_ - ray.origin_) * normal_) / (ray.direction_ * normal_);
+			if(t >= ray.tmin_ && t <= ray.tmax_)
+			{
+				// 求交点
+				Vector intersection_point = ray.origin_ + t * ray.direction_;
+				// 判断该点是否在三角形内
+				// 有角度法、面积法、同向法、重心法等算法，这里采用面积法
+				// 先计算三角形的面积
+				double tri_aera = cross(v2_ - v1_, v3_ - v1_).Length() / 2.0;
+				// 再计算以intersection_point为顶点的三个小三角形的面积
+				double aera1 = cross(intersection_point - v1_, intersection_point - v2_).Length() / 2.0;
+				double aera2 = cross(intersection_point - v2_, intersection_point - v3_).Length() / 2.0;
+				double aera3 = cross(intersection_point - v3_, intersection_point - v1_).Length() / 2.0;
+				// 比较看三个小三角形的面积和是否等于大三角形的面积
+				if(abs(aera1 + aera2 + aera3 - tri_aera) < xf::EPS)	// 相等，说明在里面
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	Vector v1_;
+	Vector v2_;
+	Vector v3_;
+	bool is_const_normal_;
+	Vector normal_;
+	Vector ambient_;
+	Material material_;
+	double mirror_coefficient_;
+};
+
+//class Polygon
+//{
+//public:
+//	Polygon() : vertices_(), ambient_(), material_()
+//	{
+//		;
+//	}
+//	vector<Vector> vertices_;
+//	Vector ambient_;
+//	Material material_;
+//};
+
 
 #endif

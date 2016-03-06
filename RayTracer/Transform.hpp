@@ -8,7 +8,7 @@ using xf::Matrix;
 static Sphere Transform(const xf::Matrix &transform_mat, Sphere sphere)
 {
 	//sphere.center_ = transform_mat * sphere.center_;
-	sphere.transform_mat_ = transform_mat;
+	sphere.inv_transform_mat_ = transform_mat.GetInverse();
 	return sphere;
 }
 
@@ -17,7 +17,7 @@ static Triangle Transform(const xf::Matrix &transform_mat, Triangle triangle)
 	triangle.v1_ = transform_mat * triangle.v1_;
 	triangle.v2_ = transform_mat * triangle.v2_;
 	triangle.v3_ = transform_mat * triangle.v3_;
-	triangle.normal_ = transform_mat.Tranpose().Inverse() * triangle.normal_;
+	triangle.normal_ = transform_mat.GetTranspose().GetInverse().TransformDirection(triangle.normal_).Normalize();
 	return triangle;
 }
 

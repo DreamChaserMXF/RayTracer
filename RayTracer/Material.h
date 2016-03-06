@@ -5,11 +5,11 @@ using xf::Vector;
 class Material
 {
 public:
-	Material() : emission_(), diffuse_(), shininess_(0.0), specular_()
+	Material() : emission_(), diffuse_(), shininess_(0), specular_()
 	{}
 	Vector emission_;
 	Vector diffuse_;
-	double shininess_;
+	int shininess_;
 	Vector specular_;
 };
 

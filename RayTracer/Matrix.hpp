@@ -62,7 +62,7 @@ namespace xf
 			delete[] data_;
 		}
 
-		Matrix Tranpose() const throw(std::bad_alloc)
+		Matrix& Transpose() throw(std::bad_alloc)
 		{
 			double  *new_data = new double[row_ * column_];
 			for(int i = 0; i < row_; ++i)
@@ -72,8 +72,17 @@ namespace xf
 					new_data[i * column_ + j] = data_[j * column_ + i];
 				}
 			}
-			Matrix ret_mat(column_, row_, new_data);
-			return ret_mat;
+			int tmp = row_;
+			row_ = column_;
+			column_ = tmp;
+			delete[] data_;
+			data_ = new_data;
+			return *this;
+		}
+
+		Matrix GetTranspose() const throw(std::bad_alloc)
+		{
+			return Matrix(*this).Transpose();
 		}
 
 		// 对第row_num行进行放缩
@@ -108,7 +117,7 @@ namespace xf
 		}
 
 		// 高斯-若当消元法求逆矩阵
-		Matrix Inverse() const throw(std::bad_alloc, std::runtime_error)
+		Matrix GetInverse() const throw(std::bad_alloc, std::runtime_error)
 		{
 			if(row_ != column_)
 			{
@@ -307,7 +316,12 @@ namespace xf
 			double homogeneous_ratio = _Right.x_ * data_[3 * column_ + 0] + _Right.y_ * data_[3 * column_ + 1] + _Right.z_ * data_[3 * column_ + 2] + data_[3 * column_ + 3];
 			if(abs(homogeneous_ratio - 1.0) > std::numeric_limits<double>::min())
 			{
-				assert(abs(homogeneous_ratio) > std::numeric_limits<double>::min());
+				// TODO assert handle
+				//if(abs(homogeneous_ratio) < std::numeric_limits<double>::min())
+				//{
+				//	std::cout << "1";
+				//}
+				assert(abs(homogeneous_ratio) > std::numeric_limits<double>::min());	// 这里真是0的话怎么办？
 				ret_vec.x_ /= homogeneous_ratio;
 				ret_vec.y_ /= homogeneous_ratio;
 				ret_vec.z_ /= homogeneous_ratio;

@@ -26,28 +26,24 @@ namespace xf
 		Vector& Normalize() throw(std::bad_cast)
 		{
 			double length = Length();
-			if(length < std::numeric_limits<double>::min())
+			if(length > DBL_MIN)
 			{
-				throw(std::bad_cast("cannot normalize zero vector"));
+				x_ /= length;
+				y_ /= length;
+				z_ /= length;
 			}
-			x_ /= length;
-			y_ /= length;
-			z_ /= length;
+			//else
+			//{
+			//	//throw(std::bad_cast("cannot normalize zero vector"));
+			//}
 			return *this;
 		}
 
+		Vector GetNormalize() const throw(std::bad_cast)
+		{
+			return Vector(*this).Normalize();
+		}
 
-		//Vector& Homogeneous() throw(std::bad_cast)
-		//{
-		//	if(0 == w_)
-		//	{
-		//		throw(std::bad_cast("cannot get hemogeneous vector with w = 0"))
-		//	}
-		//	x_ /= w_;
-		//	y_ /= w_;
-		//	z_ /= w_;
-		//	return *this;
-		//}
 		union{
 		double  x_;
 		double  r_;
@@ -96,13 +92,13 @@ namespace xf
 		{
 			return Vector(-x_, -y_, -z_);
 		}
+		// 两向量之间的乘/除
 		double operator *(const Vector &_Right) const
 		{
 			return x_ * _Right.x_
 				 + y_ * _Right.y_
 				 + z_ * _Right.z_;
 		}
-
 		Vector& operator /=(const Vector &_Right)
 		{
 			x_ /= _Right.x_;
@@ -115,15 +111,35 @@ namespace xf
 			Vector ret_vec(*this);
 			return ret_vec /= _Right;
 		}
-	};
 
-	static Vector& operator *=(Vector &vec, double factor)
-	{
-		vec.x_ *= factor;
-		vec.y_ *= factor;
-		vec.z_ *= factor;
-		return vec;
-	}
+		// 向量与数的乘除
+		Vector& operator *=(double factor)
+		{
+			x_ *= factor;
+			y_ *= factor;
+			z_ *= factor;
+			return *this;
+		}
+		Vector operator *(double factor) const
+		{
+			return Vector(x_ * factor, y_ * factor, z_ * factor);
+		}
+
+		Vector& operator /=(double factor)
+		{
+			assert(factor > DBL_MIN);
+			x_ /= factor;
+			y_ /= factor;
+			z_ /= factor;
+			return *this;
+		}
+		Vector operator /(double factor) const
+		{
+			return Vector(*this) /= factor;
+		}
+
+		
+	};
 
 	static Vector operator *(double factor, Vector vec)
 	{
@@ -132,14 +148,10 @@ namespace xf
 		vec.z_ *= factor;
 		return vec;
 	}
-
-	static Vector operator *(Vector vec, double factor)
+	static Vector operator /(double numerator, Vector vec)
 	{
-		vec.x_ *= factor;
-		vec.y_ *= factor;
-		vec.z_ *= factor;
-		return vec;
+		assert(vec.x_ > DBL_MIN && vec.y_ > DBL_MIN && vec.z_ > DBL_MIN);
+		return Vector(numerator / vec.x_, numerator / vec.y_, numerator / vec.z_);
 	}
-
 }
 #endif
