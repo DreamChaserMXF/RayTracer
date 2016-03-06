@@ -7,11 +7,8 @@ using xf::Matrix;
 
 static Sphere Transform(const xf::Matrix &transform_mat, Sphere sphere)
 {
-	sphere.center_ = transform_mat * sphere.center_;
-	//sphere.x_ = static_cast<int>(transform_mat[0][0] * sphere.x_ + transform_mat[0][1] * sphere.y_ + transform_mat[0][2] * sphere.z_ + transform_mat[0][3]);
-	//sphere.y_ = static_cast<int>(transform_mat[1][0] * sphere.x_ + transform_mat[1][1] * sphere.y_ + transform_mat[1][2] * sphere.z_ + transform_mat[1][3]);
-	//sphere.z_ = static_cast<int>(transform_mat[2][0] * sphere.x_ + transform_mat[2][1] * sphere.y_ + transform_mat[2][2] * sphere.z_ + transform_mat[2][3]);
-	// 先暂时不管置换矩阵的第四行
+	//sphere.center_ = transform_mat * sphere.center_;
+	sphere.transform_mat_ = transform_mat;
 	return sphere;
 }
 
@@ -53,7 +50,7 @@ static Matrix ScaleMatrix(const Vector &scale_vector)
 	return ret_mat;
 }
 
-static Matrix RotationMatrix(const Vector vec, double degrees)
+static Matrix RotateMatrix(const Vector vec, double degrees)
 {
 	Vector direction = vec;
 	direction.Normalize();

@@ -94,7 +94,7 @@ void ContentParse(const string &scene_file)
 			Vector rotation_vec;
 			double degrees;
 			buffer >> rotation_vec.x_ >> rotation_vec.y_ >> rotation_vec.z_ >> degrees;
-			Matrix rotation_mat = RotationMatrix(rotation_vec, degrees);
+			Matrix rotation_mat = RotateMatrix(rotation_vec, degrees);
 			cout << "rotation" << endl;
 			cout << rotation_mat;
 			G_CUR_TRANSFORM_MATRIX = G_CUR_TRANSFORM_MATRIX * rotation_mat;
@@ -199,7 +199,8 @@ void ContentParse(const string &scene_file)
 		c_iter != G_SPHERE_LIST.end(); ++c_iter)
 	{
 		cout << distance(G_SPHERE_LIST.cbegin(), c_iter) << ":" << ends
-			 << c_iter->center_.x_ << ", " << c_iter->center_.y_ << ", " << c_iter->center_.z_ << ", " << c_iter->radius_ << endl
+			 << "center: (" << c_iter->center_.x_ << ", " << c_iter->center_.y_ << ", " << c_iter->center_.z_ << "), radius: (" 
+			 << c_iter->radius_ * c_iter->transform_mat_[0][0] << ", " << c_iter->radius_ * c_iter->transform_mat_[1][1] << ", " << c_iter->radius_ * c_iter->transform_mat_[2][2] << ")" << endl
 			 << "ambient: " << c_iter->ambient_.r_ << ", " << c_iter->ambient_.g_ << ", " << c_iter->ambient_.b_ << endl
 			 << "material:"   << endl
 			 << "\tdiffuse_: "   << c_iter->material_.diffuse_.r_  << ", " << c_iter->material_.diffuse_.g_  << ", " << c_iter->material_.diffuse_.b_  << endl

@@ -3,18 +3,19 @@
 BYTE* RayTracer()
 {
 	// 计算出相机坐标系三个坐标轴的表示矩阵mRotate
-	Vector w = (G_CAM_LOOKAT - G_CAM_LOOKFROM).Normalize();
+	Vector w = (G_CAM_LOOKFROM - G_CAM_LOOKAT).Normalize();
 	Vector u = cross(G_CAM_UP, w).Normalize();
 	Vector v = cross(w, u);
 	Matrix mRotate(4);
+	// 这里的行列千万别搞反了
 	mRotate[0][0] = u.x_;
-	mRotate[1][0] = u.y_;
-	mRotate[2][0] = u.z_;
-	mRotate[0][1] = v.x_;
+	mRotate[0][1] = u.y_;
+	mRotate[0][2] = u.z_;
+	mRotate[1][0] = v.x_;
 	mRotate[1][1] = v.y_;
-	mRotate[2][1] = v.z_;
-	mRotate[0][2] = w.x_;
-	mRotate[1][2] = w.y_;
+	mRotate[1][2] = v.z_;
+	mRotate[2][0] = w.x_;
+	mRotate[2][1] = w.y_;
 	mRotate[2][2] = w.z_;
 	mRotate[3][3] = 1.0;
 	// 计算平移矩阵mTranslate
@@ -30,15 +31,16 @@ BYTE* RayTracer()
 	mTranslate[2][3] = -mTranslate[2][3];
 	Matrix mInverseTransform = mTranslate * mRotate.Tranpose();
 	cout << mInverseTransform << endl;
-	// 屏幕距相机的距离
-	double distance = 1.0 / tan(xf::radians(G_FIELD_OF_VIEW / 2));
+	// 预先计算量
+	double tan_fov_d2 = tan(xf::radians(G_FIELD_OF_VIEW / 2.0));
 	BYTE *pixels = new BYTE[G_HEIGHT * G_WIDTH * 3];	// 用TeapotViewing那种方式去计算宽度是行不通的，不知道为什么
 	for(int i = 0; i < G_HEIGHT; ++i)
 	{
 		for(int j = 0; j < G_WIDTH; ++j)
 		{
 			// 求出点(i,j)在相机坐标系的位置
-			Vector position_in_cam((G_WIDTH / 2.0 - j) / (G_HEIGHT / 2.0), (i - G_HEIGHT / 2.0) / (G_HEIGHT / 2.0), distance);
+			//Vector position_in_cam((j - G_WIDTH / 2.0) * tan(xf::radians(G_FIELD_OF_VIEW / 2.0)) / (G_HEIGHT / 2.0), (i - G_HEIGHT / 2.0) * tan(xf::radians(G_FIELD_OF_VIEW / 2.0)) / (G_HEIGHT / 2.0), -1.0);	// 原算式
+			Vector position_in_cam((2.0 * j - G_WIDTH) * tan_fov_d2 / G_HEIGHT, (2.0 * i / G_HEIGHT - 1.0) * tan_fov_d2, -1.0);	// 化简后的算式
 			// 世界坐标系中的位置
 			Vector position_in_global = mInverseTransform * position_in_cam;
 			// 方向
@@ -49,20 +51,7 @@ BYTE* RayTracer()
 			Ray ray(G_CAM_LOOKFROM, direction, tmin, tmax);
 			// 确定该点的颜色
 			Vector color = TraceColor(ray);
-			// 存储颜色
-			//if(i < G_HEIGHT / 2 && j < G_WIDTH / 2)
-			//{
-			//	pixels[(i * G_WIDTH + j) * 3 + 0] = static_cast<BYTE>(0);
-			//	pixels[(i * G_WIDTH + j) * 3 + 1] = static_cast<BYTE>(128);
-			//	pixels[(i * G_WIDTH + j) * 3 + 2] = static_cast<BYTE>(255);
-			//}
-			//else
-			//{
-			//	pixels[(i * G_WIDTH + j) * 3 + 0] = static_cast<BYTE>(255);
-			//	pixels[(i * G_WIDTH + j) * 3 + 1] = static_cast<BYTE>(128);
-			//	pixels[(i * G_WIDTH + j) * 3 + 2] = static_cast<BYTE>(0);
-			//}
-			// 存储图片时，用BGR的格式
+			// 存储图片颜色时，需要用BGR的格式
 			pixels[(i * G_WIDTH + j) * 3 + 0] = static_cast<BYTE>(color.b_);
 			pixels[(i * G_WIDTH + j) * 3 + 1] = static_cast<BYTE>(color.g_);
 			pixels[(i * G_WIDTH + j) * 3 + 2] = static_cast<BYTE>(color.r_);
@@ -71,22 +60,147 @@ BYTE* RayTracer()
 	return pixels;
 }
 
+//
+//Vector TraceColor(const Ray &ray)
+//{
+//	const Vector kBackGroundColor;
+//	//const Vector kBackGroundColor(128, 128, 255);
+//	enum {NONE, SPHERE, TRIANGLE} intersection_type = NONE;
+//	// 与物体求交
+//	double min_distance = std::numeric_limits<double>::max();
+//	// 与球求交
+//	Vector tmp1, tmp2, scale;
+//	list<Sphere>::const_iterator sphere_iter;
+//	for(list<Sphere>::const_iterator c_iter = G_SPHERE_LIST.begin();
+//		c_iter != G_SPHERE_LIST.end(); ++c_iter)
+//	{
+//		Vector tmp(c_iter->transform_mat_[0][0], c_iter->transform_mat_[1][1], c_iter->transform_mat_[2][2]);
+//		scale.x_ = c_iter->transform_mat_[0][0] + c_iter->transform_mat_[0][1] + c_iter->transform_mat_[0][2];
+//		scale.y_ = c_iter->transform_mat_[1][0] + c_iter->transform_mat_[1][1] + c_iter->transform_mat_[1][2];
+//		scale.z_ = c_iter->transform_mat_[2][0] + c_iter->transform_mat_[2][1] + c_iter->transform_mat_[2][2];
+//
+//		tmp1 = (ray.direction_ / scale);
+//		tmp2 = (ray.origin_ - c_iter->center_) / scale;
+//		double a = tmp1 * tmp1;
+//		double b = 2 * tmp1 * tmp2;
+//		double c = tmp2 * tmp2 - c_iter->radius_ * c_iter->radius_;
+//		double delta = b * b - 4.0 * a * c;
+//		if(abs(delta) < xf::EPS)	// 直线与球只有一个交点
+//		{
+//			// 计算交点的参数t
+//			double t = -b / 2.0 / a;
+//			if(t >= ray.tmin_ && t < min_distance)	// 线段与球相交，且交点更近
+//			{
+//				min_distance = t;
+//				intersection_type = SPHERE;
+//				// TODO 记下这个球的迭代器
+//				sphere_iter = c_iter;
+//			}
+//		}
+//		else if(delta > 0.0)	// 有两个交点，计算出两个t来
+//		{
+//			// t1 < t2
+//			double t1 = (-b - sqrt(delta)) / 2.0 / a;
+//			double t2 = (-b + sqrt(delta)) / 2.0 / a;
+//			// 如果t1符合要求
+//			if(t1 >= ray.tmin_ && t1 < min_distance)
+//			{
+//				min_distance = t1;
+//				intersection_type = SPHERE;
+//				// TODO 记下这个球的迭代器
+//				sphere_iter = c_iter;
+//			}
+//			else if(t2 >= ray.tmin_ && t2 < min_distance)
+//			{
+//				min_distance = t1;
+//				intersection_type = SPHERE;
+//				// TODO 记下这个球的迭代器
+//				sphere_iter = c_iter;
+//			}
+//		}
+//	}
+//
+//	// 与三角形求交
+//	list<Triangle>::const_iterator triangle_iter;
+//	for(list<Triangle>::const_iterator c_iter = G_TRIANGLE_LIST.begin();
+//		c_iter != G_TRIANGLE_LIST.end(); ++c_iter)
+//	{
+//		// 先判断直线的方向与三角形是否共面
+//		if(abs(cos(ray.direction_, c_iter->normal_)) > std::numeric_limits<double>::min())
+//		{
+//			// 不共面的情况
+//			// 则直线一定和三角形所在的平面相交
+//			// 求交点的参数t
+//			double t = ((c_iter->v1_ - ray.origin_) * c_iter->normal_) / (ray.direction_ * c_iter->normal_);
+//			if(t >= ray.tmin_ && t < min_distance)
+//			{
+//				// 求交点
+//				Vector intersection_point = ray.origin_ + t * ray.direction_;
+//				// 判断该点是否在三角形内
+//				// 有角度法、面积法、同向法、重心法等算法，这里采用面积法
+//				// 先计算三角形的面积
+//				double tri_aera = cross(c_iter->v2_ - c_iter->v1_, c_iter->v3_ - c_iter->v1_).Length() / 2.0;
+//				// 再计算以intersection_point为顶点的三个小三角形的面积
+//				double aera1 = cross(intersection_point - c_iter->v1_, intersection_point - c_iter->v2_).Length() / 2.0;
+//				double aera2 = cross(intersection_point - c_iter->v2_, intersection_point - c_iter->v3_).Length() / 2.0;
+//				double aera3 = cross(intersection_point - c_iter->v3_, intersection_point - c_iter->v1_).Length() / 2.0;
+//				// 比较看三个小三角形的面积和是否等于大三角形的面积
+//				if(abs(aera1 + aera2 + aera3 - tri_aera) < xf::EPS)	// 相等，说明在里面
+//				{
+//					min_distance = t;
+//					intersection_type = TRIANGLE;
+//					// 记录指向该三角形的迭代器
+//					triangle_iter = c_iter;
+//				}
+//			}
+//		}
+//	}
+//	// 确定颜色
+//	Vector color;
+//	// 确定最近交点
+//	if(NONE == intersection_type)
+//	{
+//		color = kBackGroundColor;
+//	}
+//	else if(TRIANGLE == intersection_type)
+//	{
+//		// 计算此处的颜色
+//		color = triangle_iter->ambient_ + triangle_iter->material_.emission_;
+//		color *= 255;
+//	}
+//	else
+//	{
+//		assert(SPHERE == intersection_type);
+//		color = sphere_iter->ambient_ + sphere_iter->material_.emission_;
+//		color *= 255;
+//	}
+//	return color;
+//}
+
+
+
 
 Vector TraceColor(const Ray &ray)
 {
-	const Vector kBackGroundColor(128, 128, 255);
+	const Vector kBackGroundColor;
+	//const Vector kBackGroundColor(128, 128, 255);
 	enum {NONE, SPHERE, TRIANGLE} intersection_type = NONE;
 	// 与物体求交
 	double min_distance = std::numeric_limits<double>::max();
 	// 与球求交
+	Vector tmp1, tmp2, scale;
 	list<Sphere>::const_iterator sphere_iter;
-	double a = ray.direction_ * ray.direction_;
 	for(list<Sphere>::const_iterator c_iter = G_SPHERE_LIST.begin();
 		c_iter != G_SPHERE_LIST.end(); ++c_iter)
 	{
-		double b = 2 * ray.direction_ * (ray.direction_ - c_iter->center_);
-		double c = (ray.origin_ - c_iter->center_) * (ray.origin_ - c_iter->center_);
-		double delta = b * b - 4 * a * c;
+		// 把视点和方向变换回去
+		Vector origin = c_iter->transform_mat_.Inverse() * ray.origin_;
+		Vector direction = c_iter->transform_mat_.Inverse().TransformDirection(ray.direction_);
+
+		double a = direction * direction;
+		double b = 2.0 * direction * (origin - c_iter->center_);
+		double c = (origin - c_iter->center_) * (origin - c_iter->center_) - c_iter->radius_ * c_iter->radius_;
+		double delta = b * b - 4.0 * a * c;
 		if(abs(delta) < xf::EPS)	// 直线与球只有一个交点
 		{
 			// 计算交点的参数t
