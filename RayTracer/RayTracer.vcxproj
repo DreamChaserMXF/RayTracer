@@ -79,8 +79,9 @@
     <ClCompile Include="GlobalTerm.cpp" />
     <ClCompile Include="Parse.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="RayTracer.cpp" />
+    <ClCompile Include="Render.cpp" />
     <ClCompile Include="SavePicture.cpp" />
+    <ClCompile Include="Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GlobalTerm.h" />
@@ -88,7 +89,7 @@
     <ClInclude Include="Math.hpp" />
     <ClInclude Include="Matrix.hpp" />
     <ClInclude Include="Primitive.h" />
-    <ClInclude Include="Transform.hpp" />
+    <ClInclude Include="Transform.h" />
     <ClInclude Include="Vector.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

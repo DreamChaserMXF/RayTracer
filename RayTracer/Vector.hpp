@@ -3,6 +3,8 @@
 
 #pragma warning(disable:4290)
 
+#include <cassert>
+
 namespace xf
 {
 

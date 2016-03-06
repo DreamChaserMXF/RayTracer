@@ -1,18 +1,14 @@
-#ifndef TRANSFORM_H
-#define TRANSFORM_H
+#include "Transform.h"
 
-#include "Primitive.h"
-#include "Matrix.hpp"
-using xf::Matrix;
 
-static Sphere Transform(const xf::Matrix &transform_mat, Sphere sphere)
-{
-	//sphere.center_ = transform_mat * sphere.center_;
-	sphere.inv_transform_mat_ = transform_mat.GetInverse();
-	return sphere;
-}
+//Sphere Transform(const xf::Matrix &transform_mat, Sphere sphere)
+//{
+//	//sphere.center_ = transform_mat * sphere.center_;
+//	sphere.inv_transform_mat_ = transform_mat.GetInverse();
+//	return sphere;
+//}
 
-static Triangle Transform(const xf::Matrix &transform_mat, Triangle triangle)
+Triangle Transform(const xf::Matrix &transform_mat, Triangle triangle)
 {
 	triangle.v1_ = transform_mat * triangle.v1_;
 	triangle.v2_ = transform_mat * triangle.v2_;
@@ -21,7 +17,7 @@ static Triangle Transform(const xf::Matrix &transform_mat, Triangle triangle)
 	return triangle;
 }
 
-static Matrix IdentityMatrix(int dimension)
+Matrix IdentityMatrix(int dimension)
 {
 	Matrix ret_mat(dimension);
 	for(int i = 0; i < ret_mat.row_; ++i)
@@ -31,7 +27,7 @@ static Matrix IdentityMatrix(int dimension)
 	return ret_mat;
 }
 
-static Matrix TranslateMatrix(const Vector &translate_vector)
+Matrix TranslateMatrix(const Vector &translate_vector)
 {
 	Matrix ret_mat = IdentityMatrix(4);
 	ret_mat[0][3] = translate_vector.x_;
@@ -40,7 +36,7 @@ static Matrix TranslateMatrix(const Vector &translate_vector)
 	return ret_mat;
 }
 
-static Matrix ScaleMatrix(const Vector &scale_vector)
+Matrix ScaleMatrix(const Vector &scale_vector)
 {
 	Matrix ret_mat(4);
 	ret_mat[0][0] = scale_vector.x_;
@@ -50,7 +46,7 @@ static Matrix ScaleMatrix(const Vector &scale_vector)
 	return ret_mat;
 }
 
-static Matrix RotateMatrix(const Vector vec, double degrees)
+Matrix RotateMatrix(const Vector vec, double degrees)
 {
 	Vector direction = vec;
 	direction.Normalize();
@@ -70,27 +66,4 @@ static Matrix RotateMatrix(const Vector vec, double degrees)
 	const double radians = xf::radians(degrees);
 	Matrix ret_mat = (1 - cos(radians)) * mProjection + cos(radians) * mIdentity + sin(radians) * mCross;
 	return ret_mat.GetHomogeneousMatrix();
-
-	//mat3 ret;
-	//// YOUR CODE FOR HW2 HERE
-	//// Please implement this.  Likely the same as in HW 1.  
-	//vec3 base = glm::normalize(axis);
-	//mat3 mProjection(
-	//	base.x_ * base.x_, base.y_ * base.x_, base.z_ * base.x_,
-	//	base.x_ * base.y_, base.y_ * base.y_, base.z_ * base.y_,
-	//	base.x_ * base.z_, base.y_ * base.z_, base.z_ * base.z_
-	//	);
-	//mat3 mIdentity(1.0f);
-	//mat3 mCross(
-	//	0.0f, base.z_, -base.y_,
-	//	-base.z_, 0.0f, base.x_,
-	//	base.y_, -base.x_, 0.0f
-	//	);	// ÁÐÖ÷Ðò£¡£¡
-	//const float radians = glm::radians(degrees);
-	
-	//ret = (1 - cos(radians)) * mProjection + cos(radians) * mIdentity + sin(radians) * mCross;
-	//return ret;
 }
-
-#endif
-

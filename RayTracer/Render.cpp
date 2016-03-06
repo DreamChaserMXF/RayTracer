@@ -46,7 +46,7 @@ static Vector ComputeLight(const Vector &eye, const Vector &vertex, const Vector
 			Vector half_vec = ((eye - vertex).Normalize() + light_direction).Normalize();
 			if(half_vec.Length() > DBL_MIN)	// 光线与视线不能共线反向
 			{
-				Ray light_ray(vertex, light_direction, xf::EPS, distance);	// imp！ EPS而不是0，如果tmin为0的话，那么，起始点就一定会与得到该交点的那个三角形相交
+				Ray light_ray(vertex, light_direction, xf::EPS * 10, distance);	// imp！ EPS而不是0，如果tmin为0的话，那么，起始点就一定会与得到该交点的那个三角形相交
 				if(IsVisible(light_ray))	// 可见
 				{
 					Vector point_color = dot_cross(c_iter->color_ / (G_ATTENUATION.x_ + G_ATTENUATION.y_ * distance + G_ATTENUATION.z_ * distance * distance),	// 衰减系数
@@ -69,12 +69,12 @@ static Vector ComputeLight(const Vector &eye, const Vector &vertex, const Vector
 		Vector half_vec = ((eye - vertex).Normalize() + light_direction).Normalize();
 		if(half_vec.Length() > DBL_MIN)	// 光线与视线不能共线反向
 		{
-			Ray light_ray(vertex, light_direction, xf::EPS, DBL_MAX);	// imp！ EPS而不是0，如果tmin为0的话，那么，起始点就一定会与得到该交点的那个三角形相交
+			Ray light_ray(vertex, light_direction, xf::EPS * 10, DBL_MAX);	// imp！ EPS而不是0，如果tmin为0的话，那么，起始点就一定会与得到该交点的那个三角形相交
 			if(IsVisible(light_ray))	// 可见
 			{
 				Vector directional_color = dot_cross(c_iter->color_,	// 衰减系数
 							(material.diffuse_ 
-							* xf::max(normal * light_direction, 0.0))		                               // 漫射光
+							* xf::max(normal * light_direction, 0.0))	// 漫射光
 						+ (material.specular_ 
 							* pow(xf::max(normal * half_vec, 0.0), material.shininess_)) // 反射光
 					);	
@@ -91,11 +91,11 @@ static Vector TraceRay(int depth, const Ray &ray)
 	{
 		return Vector();
 	}
+	// 求交
 	Primitive intersection_type = NONE;
-	// 与物体求交
 	double min_distance = ray.tmax_;
-	// 与球求交
 	double t = 0.0;
+	// 与球求交
 	list<Sphere>::const_iterator sphere_iter;
 	for(list<Sphere>::const_iterator c_iter = G_SPHERE_LIST.begin();
 		c_iter != G_SPHERE_LIST.end(); ++c_iter)
@@ -124,17 +124,22 @@ static Vector TraceRay(int depth, const Ray &ray)
 	// 确定最近交点
 	if(TRIANGLE == intersection_type)
 	{
-		// 计算此处的颜色
 		// 环境光+自发光
 		color = triangle_iter->ambient_ + triangle_iter->material_.emission_;
 		// 计算交点位置
 		Vector intersection_point = ray.origin_ + ray.direction_ * min_distance;
-		// 计算光照
+		// 计算漫射光与镜面光
 		color += ComputeLight(ray.origin_, intersection_point, triangle_iter->normal_, triangle_iter->material_);
+		// 计算反射光
+		if(triangle_iter->material_.specular_.Length() > DBL_MIN)
+		{
+			Ray reflection(intersection_point, ray.direction_ - 2.0 * triangle_iter->normal_ * ray.direction_ * triangle_iter->normal_, xf::EPS * 10, DBL_MAX);
+			color += dot_cross(triangle_iter->material_.specular_, TraceRay(depth + 1, reflection));
+		}
 	}
 	else if(SPHERE == intersection_type)
 	{
-		assert(SPHERE == intersection_type);
+		// 环境光+自发光
 		color = sphere_iter->ambient_ + sphere_iter->material_.emission_;
 		// 计算交点位置
 		Vector intersection_point = ray.origin_ + ray.direction_ * min_distance;
@@ -143,13 +148,19 @@ static Vector TraceRay(int depth, const Ray &ray)
 		Vector original_point = sphere_iter->inv_transform_mat_ * intersection_point;
 		Vector original_normal = (original_point - sphere_iter->center_).Normalize();
 		Vector normal = sphere_iter->inv_transform_mat_.GetTranspose().TransformDirection(original_normal).Normalize();
-		// 计算光照
+		// 计算漫射光与镜面光
 		color += ComputeLight(ray.origin_, intersection_point, normal, sphere_iter->material_);
+		// 计算反射光
+		if(sphere_iter->material_.specular_.Length() > DBL_MIN)
+		{
+			Ray reflection(intersection_point, ray.direction_ - 2.0 * normal * ray.direction_ * normal, xf::EPS * 10, DBL_MAX);
+			color += dot_cross(sphere_iter->material_.specular_, TraceRay(depth + 1, reflection));
+		}
 	}
 	return color;
 }
 
-BYTE* RayTracer()
+BYTE* Render()
 {
 	// 计算出相机坐标系三个坐标轴的表示矩阵mRotate
 	Vector w = (G_CAM_LOOKFROM - G_CAM_LOOKAT).Normalize();
@@ -182,8 +193,7 @@ BYTE* RayTracer()
 	//cout << mInverseTransform << endl;
 	// 预先计算量
 	double tmin = 0;
-	//double tmin = (position_in_global - G_CAM_LOOKFROM).Length();
-	double tmax = std::numeric_limits<double>::max();	// 射出的第一道光线是无穷远的(对光源的光线是有限长度的线段)
+	double tmax = DBL_MAX;	// 视点射出的光线是无穷远的
 	double tan_fov_d2 = tan(xf::radians(G_FIELD_OF_VIEW / 2.0));
 	// 存储像素的数组
 	BYTE *pixels = new BYTE[G_HEIGHT * G_WIDTH * 3];	// 用TeapotViewing那种方式去计算宽度是行不通的，不知道为什么
@@ -196,9 +206,11 @@ BYTE* RayTracer()
 	const char* dotclear_str[] = {"\b \b", "\b\b  \b\b", "\b\b\b   \b\b\b"};
 	const char* dot_str[] = {".", "..", "..."};
 	cout << "0%.";
+	// 返回值
 	Vector color;
-	for(int i = 0; i < G_HEIGHT; ++i)
+	for(int i = 0; i < G_HEIGHT; ++i)	// 对图片中的每行（从左下角开始）
 	{
+		// 输出渲染进度
 		if(0 == i % (one_percent))
 		{
 			percentage = i / one_percent;
@@ -217,7 +229,8 @@ BYTE* RayTracer()
 			dot_index = (dot_index + 1) % 3;
 			cout << dot_str[dot_index];
 		}
-		for(int j = 0; j < G_WIDTH; ++j)
+
+		for(int j = 0; j < G_WIDTH; ++j)	// 对行中的每个元素（从左开始）
 		{
 			// 求出点(i,j)在相机坐标系的位置
 			//Vector position_in_cam((j - G_WIDTH / 2.0) * tan(xf::radians(G_FIELD_OF_VIEW / 2.0)) / (G_HEIGHT / 2.0), (i - G_HEIGHT / 2.0) * tan(xf::radians(G_FIELD_OF_VIEW / 2.0)) / (G_HEIGHT / 2.0), -1.0);	// 原算式
@@ -235,7 +248,8 @@ BYTE* RayTracer()
 			}
 			else
 			{
-				color.x_ = color.y_ = color.z_ = 0.0;
+				// 不给color赋值，表示color使用上一个颜色的值
+				//color.x_ = color.y_ = color.z_ = 0.0;
 			}
 			// 存储图片颜色时，需要用BGR的格式
 			// 且需要将双精度的颜色转换为BYTE格式的颜色

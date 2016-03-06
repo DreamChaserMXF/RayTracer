@@ -28,7 +28,8 @@ vertex +1 -1 -1
 
 
 ambient 0 0 0
-specular 0 0 0
+#specular 0 0 0
+
 shininess 1
 emission 0 0 0
 diffuse 0 0 0
@@ -40,7 +41,7 @@ directional 0 1 -1 0.2 0.2 0.2
 
 diffuse 0 0 1
 #sphere 0 0.8 -1.5 0.1
-
+specular 0.05 0.05 0.05
 
 pushTransform
 
@@ -68,7 +69,8 @@ popTransform
 pushTransform
 scale 10 10 1
 translate 0 0 -2
-diffuse 1 1 1
+#diffuse 1 1 1
+diffuse 1 1 0
 tri 0 1 2
 tri 0 2 3
 popTransform
@@ -79,7 +81,8 @@ translate 0 0.5 0
 rotate 1 0 0 60
 translate 0 0 -1
 scale 10 10 1
-diffuse 1 1 1
+#diffuse 1 1 1
+diffuse 1 1 0
 tri 0 1 2
 tri 0 2 3
 popTransform
@@ -90,10 +93,12 @@ translate 0 -0.5 0
 rotate 1 0 0 -60
 translate 0 0 -1
 scale 10 10 1
-diffuse 1 1 1
+#diffuse 1 1 1
+diffuse 1 1 0
 tri 0 1 2
 tri 0 2 3
 popTransform
+
 
 #sphere
 diffuse 0.7 0.5 0.2

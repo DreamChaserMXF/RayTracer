@@ -173,7 +173,7 @@ namespace xf
 				// 消去主元所在列的其他位置的元素
 				for(int j = 0; j < row_; ++j)
 				{
-					if(j != i && abs(augmented_mat.data_[j * augmented_mat.column_ + i]) > std::numeric_limits<double>::min())
+					if(j != i && abs(augmented_mat.data_[j * augmented_mat.column_ + i]) > DBL_MIN)
 					{
 						// 用第i行，消去第j行第i列的元素
 						augmented_mat.AddRow(j, i, -augmented_mat.data_[j * augmented_mat.column_ + i]);
@@ -314,14 +314,14 @@ namespace xf
 							_Right.x_ * data_[1 * column_ + 0] + _Right.y_ * data_[1 * column_ + 1] + _Right.z_ * data_[1 * column_ + 2] + data_[1 * column_ + 3],
 							_Right.x_ * data_[2 * column_ + 0] + _Right.y_ * data_[2 * column_ + 1] + _Right.z_ * data_[2 * column_ + 2] + data_[2 * column_ + 3]);
 			double homogeneous_ratio = _Right.x_ * data_[3 * column_ + 0] + _Right.y_ * data_[3 * column_ + 1] + _Right.z_ * data_[3 * column_ + 2] + data_[3 * column_ + 3];
-			if(abs(homogeneous_ratio - 1.0) > std::numeric_limits<double>::min())
+			if(abs(homogeneous_ratio - 1.0) > DBL_MIN)
 			{
 				// TODO assert handle
 				//if(abs(homogeneous_ratio) < std::numeric_limits<double>::min())
 				//{
 				//	std::cout << "1";
 				//}
-				assert(abs(homogeneous_ratio) > std::numeric_limits<double>::min());	// 这里真是0的话怎么办？
+				assert(abs(homogeneous_ratio) > DBL_MIN);	// 这里真是0的话怎么办？
 				ret_vec.x_ /= homogeneous_ratio;
 				ret_vec.y_ /= homogeneous_ratio;
 				ret_vec.z_ /= homogeneous_ratio;

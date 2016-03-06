@@ -41,7 +41,7 @@ public:
 class Sphere
 {
 public:
-	Sphere() : center_(), radius_(0.0), inv_transform_mat_(4), ambient_(0.2, 0.2, 0.2), material_(), mirror_coefficient_(0.0)
+	Sphere() : center_(), radius_(0.0), inv_transform_mat_(4), ambient_(0.2, 0.2, 0.2), material_()
 	{
 		;
 	}
@@ -91,19 +91,18 @@ public:
 	Matrix inv_transform_mat_;
 	Vector ambient_;
 	Material material_;
-	double mirror_coefficient_;
 };
 class Triangle
 {
 public:
-	Triangle() : v1_(), v2_(), v3_(), is_const_normal_(true), normal_(), ambient_(0.2, 0.2, 0.2), material_(), mirror_coefficient_(0.0)
+	Triangle() : v1_(), v2_(), v3_(), is_const_normal_(true), normal_(), ambient_(0.2, 0.2, 0.2), material_()
 	{
 		;
 	}
 	bool IntersectTest(const Ray &ray, double &t) const
 	{
 		// 先判断直线的方向与三角形是否共面
-		if(abs(cos(ray.direction_, normal_)) > std::numeric_limits<double>::min())
+		if(abs(cos(ray.direction_, normal_)) > DBL_MIN)
 		{
 			// 不共面的情况
 			// 则直线一定和三角形所在的平面相交
@@ -137,7 +136,6 @@ public:
 	Vector normal_;
 	Vector ambient_;
 	Material material_;
-	double mirror_coefficient_;
 };
 
 //class Polygon

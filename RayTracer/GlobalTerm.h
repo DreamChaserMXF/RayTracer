@@ -15,7 +15,7 @@
 #include "Material.h"
 #include "Vector.hpp"
 #include "Matrix.hpp"
-#include "Transform.hpp"
+#include "Transform.h"
 
 using xf::Matrix;
 using xf::Vector;
@@ -52,9 +52,9 @@ extern list<Triangle> G_TRIANGLE_LIST;
 extern stack<Matrix> G_MODELVIEWMATRIX_STACK;
 extern Matrix G_CUR_TRANSFORM_MATRIX;
 
-
+void init();
 void ContentParse(const string &scene_file, ostream &out);
-BYTE* RayTracer();
+BYTE* Render();
 void SavePicture(BYTE* pixels, const string &name);
 
 #endif

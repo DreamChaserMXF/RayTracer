@@ -14,16 +14,18 @@ void ContentParse(const string &scene_file, ostream &out)
 	istringstream buffer;
 	string command;
 	
+	// 持久变量（跨循环使用）
 	Material material;
 	Vector ambient;
-	
-	Sphere sphere;
 	vector<Vector> vertices;
+	// 辅助变量（免除循环内定义的变量）
+	Vector vec_general;
+	int v1, v2, v3, verts_num;
 	Triangle triangle;
-	Light point_light;
-	Light directional_light;
-	
-	
+	Sphere sphere;
+	Light light;
+	double degrees;
+	// 计数变量
 	int count = 0;
 	cout << '\n';
 	while(std::getline(f_in, line))
@@ -63,44 +65,48 @@ void ContentParse(const string &scene_file, ostream &out)
 			buffer >> sphere.center_.x_ >> sphere.center_.y_ >> sphere.center_.z_ >> sphere.radius_;
 			sphere.ambient_ = ambient;
 			sphere.material_ = material;
-			G_SPHERE_LIST.push_back(Transform(G_CUR_TRANSFORM_MATRIX, sphere));
+			sphere.inv_transform_mat_ = G_CUR_TRANSFORM_MATRIX.GetInverse();
+			G_SPHERE_LIST.push_back(sphere);
 		}
 		else if("tri" == command)
 		{
-			int v1, v2, v3;
 			buffer >> v1 >> v2 >> v3;
 			triangle.v1_ = vertices.at(v1);
 			triangle.v2_ = vertices.at(v2);
 			triangle.v3_ = vertices.at(v3);
-			// 求出法线
+			// 求法向量
 			triangle.normal_ = xf::cross(vertices.at(v2) - vertices.at(v1), vertices.at(v3) - vertices.at(v2)).Normalize();
 			triangle.ambient_ = ambient;
 			triangle.material_ = material;
+			//G_TRIANGLE_LIST.push_back(triangle);
 			G_TRIANGLE_LIST.push_back(Transform(G_CUR_TRANSFORM_MATRIX, triangle));
 		}
 		else if("vertex" == command)
 		{
-			Vector vertex;
-			buffer >> vertex.x_ >> vertex.y_ >> vertex.z_;
-			vertices.push_back(vertex);
+			buffer >> vec_general.x_ >> vec_general.y_ >> vec_general.z_;
+			vertices.push_back(vec_general);
+			//vertices.push_back(G_CUR_TRANSFORM_MATRIX * vec_general);
 		}
 		else if("translate" == command)
 		{
 			Vector translate_vec;
 			buffer >> translate_vec.x_ >> translate_vec.y_ >> translate_vec.z_;
 			Matrix translate_mat = TranslateMatrix(translate_vec);
+#ifdef _DEBUG
 			out << "translation" << '\n';
 			out << translate_mat;
+#endif
 			G_CUR_TRANSFORM_MATRIX = G_CUR_TRANSFORM_MATRIX * translate_mat;
 		}
 		else if("rotate" == command)
 		{
 			Vector rotation_vec;
-			double degrees;
 			buffer >> rotation_vec.x_ >> rotation_vec.y_ >> rotation_vec.z_ >> degrees;
 			Matrix rotation_mat = RotateMatrix(rotation_vec, degrees);
+#ifdef _DEBUG
 			out << "rotation" << '\n';
 			out << rotation_mat;
+#endif
 			G_CUR_TRANSFORM_MATRIX = G_CUR_TRANSFORM_MATRIX * rotation_mat;
 		}
 		else if("scale" == command)
@@ -108,32 +114,40 @@ void ContentParse(const string &scene_file, ostream &out)
 			Vector scale_vec;
 			buffer >> scale_vec.x_ >> scale_vec.y_ >> scale_vec.z_;
 			Matrix scale_mat = ScaleMatrix(scale_vec);
+#ifdef _DEBUG
 			out << "scale" << '\n';
 			out << scale_mat;
+#endif
 			G_CUR_TRANSFORM_MATRIX = G_CUR_TRANSFORM_MATRIX * scale_mat;
 		}
 		else if("pushTransform" == command)
 		{
 			G_MODELVIEWMATRIX_STACK.push(G_CUR_TRANSFORM_MATRIX);
+#ifdef _DEBUG
 			out << "after push, size of matrix stack = " << G_MODELVIEWMATRIX_STACK.size() << '\n';
+#endif
 		}
 		else if("popTransform" == command)
 		{
 			G_CUR_TRANSFORM_MATRIX = G_MODELVIEWMATRIX_STACK.top();
 			G_MODELVIEWMATRIX_STACK.pop();
+#ifdef _DEBUG
 			out << "after pop, size of matrix stack = " << G_MODELVIEWMATRIX_STACK.size() << '\n';
-		}
-		else if("directional" == command)
-		{
-			buffer >> directional_light.origin_.x_ >> directional_light.origin_.y_ >> directional_light.origin_.z_
-				>> directional_light.color_.x_ >> directional_light.color_.y_ >> directional_light.color_.z_;
-			G_DIRECTIONALLIGHT_LIST.push_back(directional_light);
+#endif
 		}
 		else if("point" == command)
 		{
-			buffer >> point_light.origin_.x_ >> point_light.origin_.y_ >> point_light.origin_.z_
-				>> point_light.color_.x_ >> point_light.color_.y_ >> point_light.color_.z_;
-			G_POINTLIGHT_LIST.push_back(point_light);
+			buffer >> light.origin_.x_ >> light.origin_.y_ >> light.origin_.z_
+				>> light.color_.x_ >> light.color_.y_ >> light.color_.z_;
+			light.origin_ = G_CUR_TRANSFORM_MATRIX * light.origin_;
+			G_POINTLIGHT_LIST.push_back(light);
+		}
+		else if("directional" == command)
+		{
+			buffer >> light.origin_.x_ >> light.origin_.y_ >> light.origin_.z_
+				>> light.color_.x_ >> light.color_.y_ >> light.color_.z_;
+			light.origin_ = G_CUR_TRANSFORM_MATRIX.TransformDirection(light.origin_);
+			G_DIRECTIONALLIGHT_LIST.push_back(light);
 		}
 		else if("attenuation" == command)
 		{
@@ -161,7 +175,6 @@ void ContentParse(const string &scene_file, ostream &out)
 		}
 		else if("maxverts" == command)	// 确定顶点总数
 		{
-			int verts_num;
 			buffer >> verts_num;
 			vertices.reserve(verts_num);
 		}
@@ -171,11 +184,13 @@ void ContentParse(const string &scene_file, ostream &out)
 		}
 		else
 		{
-			out << "havn't handle this: " << line << '\n';
+			cout << "havn't handle this: " << line << '\n';
 			assert(false);
 		}
 	}
+#ifdef _DEBUG
 	cout << "\n\tprint parameter...";
+	// GLOBAL TERM
 	out << "widht = " << G_WIDTH << "\theight = " << G_HEIGHT << '\n';
 	out << "max depth = " << G_MAXDEPTH << '\n';
 	out << "result file name:     " << G_OUTPUT_FILENAME << '\n';
@@ -183,6 +198,7 @@ void ContentParse(const string &scene_file, ostream &out)
 		 << "camera look at:       " << G_CAM_LOOKAT.x_   << ", " << G_CAM_LOOKAT.y_   << ", " << G_CAM_LOOKAT.z_ << '\n'
 		 << "camera up direction:  " << G_CAM_UP.x_       << ", " << G_CAM_UP.y_       << ", " << G_CAM_UP.z_ << '\n'
 		 << "camera field of view: " << G_FIELD_OF_VIEW << '\n';
+	// LIGHTING
 	cout << "\n\tprint lighting...";
 	out << "point light: " << '\n';
 	for(list<Light>::const_iterator c_iter = G_POINTLIGHT_LIST.begin();
@@ -198,8 +214,8 @@ void ContentParse(const string &scene_file, ostream &out)
 		out << "\tdirection: (" << c_iter->origin_.x_ << ", " << c_iter->origin_.y_ << ", " << c_iter->origin_.z_ << ") "
 			 << "\tcolor: (" << c_iter->color_.x_ << ", " << c_iter->color_.y_ << ", " << c_iter->color_.z_ << ")" << '\n';
 	}
-	// ATTENUATION
 	out << "Attenuation: " << G_ATTENUATION.x_ << ", " << G_ATTENUATION.y_ << ", " << G_ATTENUATION.z_ << '\n';
+	// SPHERE
 	cout << "\n\tprint sphere...";
 	out << "Sphere: " << '\n';
 	for(list<Sphere>::const_iterator c_iter = G_SPHERE_LIST.begin();
@@ -214,6 +230,7 @@ void ContentParse(const string &scene_file, ostream &out)
 			 << "\tshininess_: " << c_iter->material_.shininess_   << '\n'
 			 << "\temission_: "  << c_iter->material_.emission_.r_ << ", " << c_iter->material_.emission_.g_ << ", " << c_iter->material_.emission_.b_ << '\n';
 	}
+	// TRIANGLE
 	cout << "\n\tprint triangle...";
 	out << "Triangle: " << '\n';
 	for(list<Triangle>::const_iterator c_iter = G_TRIANGLE_LIST.begin();
@@ -230,5 +247,5 @@ void ContentParse(const string &scene_file, ostream &out)
 			 << "\tshininess_: " << c_iter->material_.shininess_   << '\n'
 			 << "\temission_: "  << c_iter->material_.emission_.r_ << ", " << c_iter->material_.emission_.g_ << ", " << c_iter->material_.emission_.b_ << '\n';
 	}
-	cout << '\n';
+#endif
 }

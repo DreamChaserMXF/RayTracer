@@ -2,11 +2,11 @@
 # Intended to show transforms
 # I know it's not the most exciting of scenes...
 
+output scene3.png
+
 size 640 480 
 
 camera 0 -4 4 0 -1 0 0 1 1 45
-
-
 
 maxverts 8
 
