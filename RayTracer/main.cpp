@@ -11,7 +11,7 @@ int main()
 {
 	const string pic_name = "RayTracer.png";
 	freopen("output.txt", "w", stdout);
-	string scene_file = "D:\\MXFXF\\Project\\C++\\OpenGL\\CG Introduction\\RayTracer\\testscenes\\scene1.test";
+	string scene_file = ".\\testscenes\\scene3.test";
 	//string scene_file = "D:\\MXFXF\\Project\\C++\\OpenGL\\CG Introduction\\RayTracer\\testscenes\\scene2.test";
 	//string scene_file = "D:\\MXFXF\\Project\\C++\\OpenGL\\CG Introduction\\RayTracer\\testscenes\\scene3.test";
 	//string scene_file = "D:\\MXFXF\\Project\\C++\\OpenGL\\CG Introduction\\RayTracer\\hw3-submissionscenes\\scene4-ambient.test";

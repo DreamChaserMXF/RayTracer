@@ -102,6 +102,19 @@ namespace xf
 				 + y_ * _Right.y_
 				 + z_ * _Right.z_;
 		}
+
+		Vector& operator /=(const Vector &_Right)
+		{
+			x_ /= _Right.x_;
+			y_ /= _Right.y_;
+			z_ /= _Right.z_;
+			return *this;
+		}
+		Vector operator /(const Vector &_Right) const
+		{
+			Vector ret_vec(*this);
+			return ret_vec /= _Right;
+		}
 	};
 
 	static Vector& operator *=(Vector &vec, double factor)

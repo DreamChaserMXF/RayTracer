@@ -291,7 +291,15 @@ namespace xf
 			return ret_mat;
 		}
 
-		Vector operator * (const Vector &_Right) const
+		Vector TransformDirection(const Vector &_Right) const
+		{
+			Vector ret_vec( _Right.x_ * data_[0 * column_ + 0] + _Right.y_ * data_[0 * column_ + 1] + _Right.z_ * data_[0 * column_ + 2],
+							_Right.x_ * data_[1 * column_ + 0] + _Right.y_ * data_[1 * column_ + 1] + _Right.z_ * data_[1 * column_ + 2],
+							_Right.x_ * data_[2 * column_ + 0] + _Right.y_ * data_[2 * column_ + 1] + _Right.z_ * data_[2 * column_ + 2]);
+			return ret_vec;
+		}
+
+		Vector TransformVector(const Vector &_Right) const
 		{
 			Vector ret_vec( _Right.x_ * data_[0 * column_ + 0] + _Right.y_ * data_[0 * column_ + 1] + _Right.z_ * data_[0 * column_ + 2] + data_[0 * column_ + 3],
 							_Right.x_ * data_[1 * column_ + 0] + _Right.y_ * data_[1 * column_ + 1] + _Right.z_ * data_[1 * column_ + 2] + data_[1 * column_ + 3],
@@ -305,6 +313,11 @@ namespace xf
 				ret_vec.z_ /= homogeneous_ratio;
 			}
 			return ret_vec;
+		}
+
+		Vector operator * (const Vector &_Right) const
+		{
+			return TransformVector(_Right);
 		}
 
 		double* operator [](int n) const throw()

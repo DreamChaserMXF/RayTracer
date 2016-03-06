@@ -2,19 +2,24 @@
 #define PRIMITIVE_H
 #include <vector>
 #include "Vector.hpp"
+#include "Matrix.hpp"
 #include "Material.h"
 
 using xf::Vector;
+using xf::Matrix;
 using std::vector;
+
+// 球的半径用向量存储，因为可能会在三个维度上进行缩放
 class Sphere
 {
 public:
-	Sphere() : center_(), radius_(0), ambient_(0.2, 0.2, 0.2), material_()
+	Sphere() : center_(), radius_(0.0), transform_mat_(4), ambient_(0.2, 0.2, 0.2), material_()
 	{
 		;
 	}
 	Vector center_;
 	double radius_;
+	Matrix transform_mat_;
 	Vector ambient_;
 	Material material_;
 };
