@@ -8,28 +8,28 @@ using std::endl;
 using std::string;
 
 const char* scene_files[] = {
-	 ".\\testscenes\\scene1-camera1.test",
-	 ".\\testscenes\\scene1-camera2.test",
-	 ".\\testscenes\\scene1-camera3.test",
-	 ".\\testscenes\\scene1-camera4.test",
-	 ".\\testscenes\\scene2-camera1.test",
-	 ".\\testscenes\\scene2-camera2.test",
-	 ".\\testscenes\\scene2-camera3.test",
-	 ".\\testscenes\\scene3.test",
-	 ".\\hw3-submissionscenes\\scene4-ambient.test",
-	 ".\\hw3-submissionscenes\\scene4-diffuse.test",
-	 ".\\hw3-submissionscenes\\scene4-emission.test",
-	 ".\\hw3-submissionscenes\\scene4-specular.test",
-	 ".\\hw3-submissionscenes\\scene5.test",
-	 ".\\hw3-submissionscenes\\scene6.test",
-	 ".\\hw3-submissionscenes\\scene7.test",
+/*  0 */	 ".\\testscenes\\scene1-camera1.test",
+/*  1 */	 ".\\testscenes\\scene1-camera2.test",
+/*  2 */	 ".\\testscenes\\scene1-camera3.test",
+/*  3 */	 ".\\testscenes\\scene1-camera4.test",
+/*  4 */	 ".\\testscenes\\scene2-camera1.test",
+/*  5 */	 ".\\testscenes\\scene2-camera2.test",
+/*  6 */	 ".\\testscenes\\scene2-camera3.test",
+/*  7 */	 ".\\testscenes\\scene3.test",
+/*  8 */	 ".\\hw3-submissionscenes\\scene4-ambient.test",
+/*  9 */	 ".\\hw3-submissionscenes\\scene4-diffuse.test",
+/* 10 */	 ".\\hw3-submissionscenes\\scene4-emission.test",
+/* 11 */	 ".\\hw3-submissionscenes\\scene4-specular.test",
+/* 12 */	 ".\\hw3-submissionscenes\\scene5.test",	// thousand balls
+/* 13 */	 ".\\hw3-submissionscenes\\scene6.test",	// cornell box
+/* 14 */	 ".\\hw3-submissionscenes\\scene7.test",	// stanford dragon
 };
 
 static void RenderOneScene()
 {
 	ofstream out("output.txt");
 	cout << "parsing: ";
-	ContentParse(scene_files[13], out);
+	ContentParse(scene_files[14], out);
 	//cout << G_CAM_LOOKFROM.z_ << endl;
 	cout << "\nray tracing:" << endl;
 	BYTE* pixels = Render();
@@ -57,7 +57,7 @@ static void BatchRender()
 
 int main()
 {
-	//RenderOneScene();
-	BatchRender();
+	RenderOneScene();
+	//BatchRender();
 	return 0;
 }

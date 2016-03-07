@@ -70,9 +70,9 @@ static Vector ComputeLight(const Vector &eye, const Vector &vertex, const Vector
 		if(half_vec.Length() > DBL_MIN)	// 光线与视线不能共线反向
 		{
 			Ray light_ray(vertex, light_direction, xf::EPS * 10, DBL_MAX);	// imp！ EPS而不是0，如果tmin为0的话，那么，起始点就一定会与得到该交点的那个三角形相交
-			if(IsVisible(light_ray))	// 可见
+			//if(IsVisible(light_ray))	// 可见
 			{
-				Vector directional_color = dot_cross(c_iter->color_,	// 衰减系数
+				Vector directional_color = dot_cross(c_iter->color_,
 							(material.diffuse_ 
 							* xf::max(normal * light_direction, 0.0))	// 漫射光
 						+ (material.specular_ 
@@ -246,6 +246,18 @@ BYTE* Render()
 				Ray ray(G_CAM_LOOKFROM, direction, tmin, tmax);
 				// 确定该点的颜色
 				color = TraceRay(0, ray);
+				if(color.x_ > 1.0)
+				{
+					color.x_ = 1.0;
+				}
+				if(color.y_ > 1.0)
+				{
+					color.y_ = 1.0;
+				}
+				if(color.z_ > 1.0)
+				{
+					color.z_ = 1.0;
+				}
 			}
 			else
 			{
