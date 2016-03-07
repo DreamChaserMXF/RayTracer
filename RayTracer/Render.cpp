@@ -195,6 +195,7 @@ BYTE* Render()
 	double tmin = 0;
 	double tmax = DBL_MAX;	// 视点射出的光线是无穷远的
 	double tan_fov_d2 = tan(xf::radians(G_FIELD_OF_VIEW / 2.0));
+	double tan_fov_d2_dh = tan_fov_d2 / G_HEIGHT;
 	// 存储像素的数组
 	BYTE *pixels = new BYTE[G_HEIGHT * G_WIDTH * 3];	// 用TeapotViewing那种方式去计算宽度是行不通的，不知道为什么
 	// 用于计算进度的变量
@@ -233,8 +234,8 @@ BYTE* Render()
 		for(int j = 0; j < G_WIDTH; ++j)	// 对行中的每个元素（从左开始）
 		{
 			// 求出点(i,j)在相机坐标系的位置
-			//Vector position_in_cam((j - G_WIDTH / 2.0) * tan(xf::radians(G_FIELD_OF_VIEW / 2.0)) / (G_HEIGHT / 2.0), (i - G_HEIGHT / 2.0) * tan(xf::radians(G_FIELD_OF_VIEW / 2.0)) / (G_HEIGHT / 2.0), -1.0);	// 原算式
-			Vector position_in_cam((2.0 * j - G_WIDTH) * tan_fov_d2 / G_HEIGHT, (2.0 * i / G_HEIGHT - 1.0) * tan_fov_d2, -1.0);	// 化简后的算式
+			//Vector position_in_cam((j - G_WIDTH / 2.0 + 0.5) * tan(xf::radians(G_FIELD_OF_VIEW / 2.0)) / (G_HEIGHT / 2.0), (i - G_HEIGHT / 2.0 + 0.5) * tan(xf::radians(G_FIELD_OF_VIEW / 2.0)) / (G_HEIGHT / 2.0), -1.0);	// 原算式
+			Vector position_in_cam((2.0 * j - G_WIDTH + 1.0) * tan_fov_d2_dh, (2.0 * i - G_HEIGHT + 1.0) * tan_fov_d2_dh, -1.0);	// 化简后的算式
 			// 世界坐标系中的位置
 			Vector position_in_global = mInverseTransform * position_in_cam;
 			// 方向
