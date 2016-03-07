@@ -1,0 +1,50 @@
+# Scene 9
+
+output scene9.png
+
+IndependentMirrorOn
+#DirectionalUniverseOn
+
+size 5000 5000
+
+maxdepth 10
+
+camera 0 0 0 0 0 -1 0 1 0 45
+
+directional -0.57735027 0.57735027 0.57735027 1 1 1
+directional 0.57735027 -0.57735027 -0.57735027 1 1 1
+
+ambient 0.1 0.1 0.1
+diffuse 1 0 0
+specular 1 1 1
+shininess 50
+mirror 0.9 0.9 0.9
+sphere 0 0 -17 2
+
+ambient 0.1 0.1 0.1
+diffuse 0 1 0
+specular 1 1 1
+shininess 50
+mirror 0.9 0.9 0.9
+sphere 0 4 -17 1.5
+
+ambient 0.1 0.1 0.1
+diffuse 0 0 1
+specular 1 1 1
+shininess 50
+mirror 0.9 0.9 0.9
+sphere 0 -4 -17 1.5
+
+ambient 0.1 0.1 0.1
+diffuse 1 1 0
+specular 1 1 1
+shininess 50
+mirror 0.9 0.9 0.9
+sphere 4 0 -17 1.5
+
+ambient 0.1 0.1 0.1
+diffuse 0 1 1
+specular 1 1 1
+shininess 50
+mirror 0.9 0.9 0.9
+sphere -4 0 -17 1.5

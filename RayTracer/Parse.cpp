@@ -14,9 +14,10 @@ void ContentParse(const string &scene_file, ostream &out)
 	istringstream buffer;
 	string command;
 	
+	// 控制变量
+	bool independent_mirror = false;
 	// 持久变量（跨循环使用）
 	Material material;
-	Vector ambient;
 	vector<Vector> vertices;
 	// 辅助变量（免除循环内定义的变量）
 	Vector vec_general;
@@ -63,7 +64,6 @@ void ContentParse(const string &scene_file, ostream &out)
 		else if("sphere" == command)
 		{
 			buffer >> sphere.center_.x_ >> sphere.center_.y_ >> sphere.center_.z_ >> sphere.radius_;
-			sphere.ambient_ = ambient;
 			sphere.material_ = material;
 			sphere.inv_transform_mat_ = G_CUR_TRANSFORM_MATRIX.GetInverse();
 			G_SPHERE_LIST.push_back(sphere);
@@ -76,7 +76,6 @@ void ContentParse(const string &scene_file, ostream &out)
 			triangle.v3_ = vertices.at(v3);
 			// 求法向量
 			triangle.normal_ = xf::cross(vertices.at(v2) - vertices.at(v1), vertices.at(v3) - vertices.at(v2)).Normalize();
-			triangle.ambient_ = ambient;
 			triangle.material_ = material;
 			//G_TRIANGLE_LIST.push_back(triangle);
 			G_TRIANGLE_LIST.push_back(Transform(G_CUR_TRANSFORM_MATRIX, triangle));
@@ -155,7 +154,11 @@ void ContentParse(const string &scene_file, ostream &out)
 		}
 		else if("ambient" == command)
 		{
-			buffer >> ambient.r_ >> ambient.g_ >> ambient.b_;
+			buffer >> material.ambient_.r_ >> material.ambient_.g_ >> material.ambient_.b_;
+		}
+		else if("emission" == command)
+		{
+			buffer >> material.emission_.r_ >> material.emission_.g_ >> material.emission_.b_;
 		}
 		else if("diffuse" == command)
 		{
@@ -164,19 +167,42 @@ void ContentParse(const string &scene_file, ostream &out)
 		else if("specular" == command)
 		{
 			buffer >> material.specular_.r_ >> material.specular_.g_ >> material.specular_.b_;
+			if(!independent_mirror)
+			{
+				material.mirror_coefficient_ = material.specular_;
+			}
 		}
 		else if("shininess" == command)
 		{
 			buffer >> material.shininess_;
 		}
-		else if("emission" == command)
+		else if("mirror" == command)
 		{
-			buffer >> material.emission_.r_ >> material.emission_.g_ >> material.emission_.b_;
+			if(independent_mirror)
+			{
+				buffer >> material.mirror_coefficient_.r_ >> material.mirror_coefficient_.g_ >> material.mirror_coefficient_.b_;
+			}
 		}
 		else if("maxverts" == command)	// 确定顶点总数
 		{
 			buffer >> verts_num;
 			vertices.reserve(verts_num);
+		}
+		else if("IndependentMirrorOn" == command)
+		{
+			independent_mirror = true;
+		}
+		else if("IndependentMirrorOff" == command)
+		{
+			independent_mirror = false;
+		}
+		else if("DirectionalUniverseOn" == command)
+		{
+			G_DIRECTIONAL_UNIVERSE = true;
+		}
+		else if("DirectionalUniverseOff" == command)
+		{
+			G_DIRECTIONAL_UNIVERSE = false;
 		}
 		else if("maxvertnorms" == command)
 		{
@@ -223,7 +249,7 @@ void ContentParse(const string &scene_file, ostream &out)
 	{
 		out << distance(G_SPHERE_LIST.cbegin(), c_iter) << ":" << '\t'
              << "center: (" << c_iter->center_.x_ << ", " << c_iter->center_.y_ << ", " << c_iter->center_.z_ << "), original radius: " << c_iter->radius_ << '\n'  
-			 << "ambient: " << c_iter->ambient_.r_ << ", " << c_iter->ambient_.g_ << ", " << c_iter->ambient_.b_ << '\n'
+			 << "ambient: " << c_iter->material_.ambient_.r_ << ", " << c_iter->material_.ambient_.g_ << ", " << c_iter->material_.ambient_.b_ << '\n'
 			 << "material:"   << '\n'
 			 << "\tdiffuse_: "   << c_iter->material_.diffuse_.r_  << ", " << c_iter->material_.diffuse_.g_  << ", " << c_iter->material_.diffuse_.b_  << '\n'
 			 << "\tspecular_: "  << c_iter->material_.specular_.r_ << ", " << c_iter->material_.specular_.g_ << ", " << c_iter->material_.specular_.b_ << '\n'
@@ -240,7 +266,7 @@ void ContentParse(const string &scene_file, ostream &out)
 			 << "(" << c_iter->v1_.x_ << ", " << c_iter->v1_.y_ << ", " << c_iter->v1_.z_ << "), "
 			 << "(" << c_iter->v2_.x_ << ", " << c_iter->v2_.y_ << ", " << c_iter->v2_.z_ << "), "
 			 << "(" << c_iter->v3_.x_ << ", " << c_iter->v3_.y_ << ", " << c_iter->v3_.z_ << "), "<< '\n'
-			 << "ambient: " << c_iter->ambient_.r_ << ", " << c_iter->ambient_.g_ << ", " << c_iter->ambient_.b_ << '\n'
+			 << "ambient: " << c_iter->material_.ambient_.r_ << ", " << c_iter->material_.ambient_.g_ << ", " << c_iter->material_.ambient_.b_ << '\n'
 			 << "material:"   << '\n'
 			 << "\tdiffuse_: "   << c_iter->material_.diffuse_.r_  << ", " << c_iter->material_.diffuse_.g_  << ", " << c_iter->material_.diffuse_.b_  << '\n'
 			 << "\tspecular_: "  << c_iter->material_.specular_.r_ << ", " << c_iter->material_.specular_.g_ << ", " << c_iter->material_.specular_.b_ << '\n'

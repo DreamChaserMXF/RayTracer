@@ -36,6 +36,8 @@ extern int G_WIDTH;
 extern int G_MAXDEPTH;
 extern string G_OUTPUT_FILENAME;
 
+extern bool G_DIRECTIONAL_UNIVERSE;
+
 extern Vector G_CAM_LOOKFROM;
 extern Vector G_CAM_LOOKAT;
 extern Vector G_CAM_UP;

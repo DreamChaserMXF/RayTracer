@@ -10,6 +10,8 @@ Vector G_CAM_LOOKAT;
 Vector G_CAM_UP;
 double G_FIELD_OF_VIEW = 0;
 
+bool G_DIRECTIONAL_UNIVERSE = false;
+
 list<Light> G_POINTLIGHT_LIST;
 list<Light> G_DIRECTIONALLIGHT_LIST;
 Vector G_ATTENUATION(1.0, 0.0, 0.0);

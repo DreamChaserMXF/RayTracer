@@ -23,13 +23,16 @@ const char* scene_files[] = {
 /* 12 */	 ".\\hw3-submissionscenes\\scene5.test",	// thousand balls
 /* 13 */	 ".\\hw3-submissionscenes\\scene6.test",	// cornell box
 /* 14 */	 ".\\hw3-submissionscenes\\scene7.test",	// stanford dragon
+/* 15 */	 ".\\testscenes\\scene8.test",	// 3 spheres reflected by a trangle
+/* 16 */	 ".\\testscenes\\scene9.test",	// 5 spheres
+/* 17 */	 ".\\testscenes\\scene10.test",	// 5 ellipses
 };
 
 static void RenderOneScene()
 {
 	ofstream out("output.txt");
 	cout << "parsing: ";
-	ContentParse(scene_files[14], out);
+	ContentParse(scene_files[17], out);
 	//cout << G_CAM_LOOKFROM.z_ << endl;
 	cout << "\nray tracing:" << endl;
 	BYTE* pixels = Render();
@@ -61,3 +64,4 @@ int main()
 	//BatchRender();
 	return 0;
 }
+

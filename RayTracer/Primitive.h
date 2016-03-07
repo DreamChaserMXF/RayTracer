@@ -41,7 +41,7 @@ public:
 class Sphere
 {
 public:
-	Sphere() : center_(), radius_(0.0), inv_transform_mat_(4), ambient_(0.2, 0.2, 0.2), material_()
+	Sphere() : center_(), radius_(0.0), inv_transform_mat_(4), material_()
 	{
 		;
 	}
@@ -89,13 +89,12 @@ public:
 	Vector center_;
 	double radius_;
 	Matrix inv_transform_mat_;
-	Vector ambient_;
 	Material material_;
 };
 class Triangle
 {
 public:
-	Triangle() : v1_(), v2_(), v3_(), is_const_normal_(true), normal_(), ambient_(0.2, 0.2, 0.2), material_()
+	Triangle() : v1_(), v2_(), v3_(), is_const_normal_(true), normal_(), material_()
 	{
 		;
 	}
@@ -134,7 +133,6 @@ public:
 	Vector v3_;
 	bool is_const_normal_;
 	Vector normal_;
-	Vector ambient_;
 	Material material_;
 };
 

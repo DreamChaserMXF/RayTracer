@@ -32,6 +32,7 @@ static bool IsVisible(const Ray &ray)
 
 static Vector ComputeLight(const Vector &eye, const Vector &vertex, const Vector &normal, const Material &material)
 {
+	// 初始化光照
 	Vector color;
 	// 点光源
 	for(list<Light>::const_iterator c_iter = G_POINTLIGHT_LIST.begin();
@@ -70,7 +71,7 @@ static Vector ComputeLight(const Vector &eye, const Vector &vertex, const Vector
 		if(half_vec.Length() > DBL_MIN)	// 光线与视线不能共线反向
 		{
 			Ray light_ray(vertex, light_direction, xf::EPS * 10, DBL_MAX);	// imp！ EPS而不是0，如果tmin为0的话，那么，起始点就一定会与得到该交点的那个三角形相交
-			//if(IsVisible(light_ray))	// 可见
+			if(G_DIRECTIONAL_UNIVERSE || IsVisible(light_ray))	// 可见
 			{
 				Vector directional_color = dot_cross(c_iter->color_,
 							(material.diffuse_ 
@@ -125,22 +126,22 @@ static Vector TraceRay(int depth, const Ray &ray)
 	if(TRIANGLE == intersection_type)
 	{
 		// 环境光+自发光
-		color = triangle_iter->ambient_ + triangle_iter->material_.emission_;
+		color = triangle_iter->material_.ambient_ + triangle_iter->material_.emission_;
 		// 计算交点位置
 		Vector intersection_point = ray.origin_ + ray.direction_ * min_distance;
-		// 计算漫射光与镜面光
+		// 计算直接光照
 		color += ComputeLight(ray.origin_, intersection_point, triangle_iter->normal_, triangle_iter->material_);
 		// 计算反射光
-		if(triangle_iter->material_.specular_.Length() > DBL_MIN)
+		if(triangle_iter->material_.mirror_coefficient_.Length() > DBL_MIN)
 		{
 			Ray reflection(intersection_point, ray.direction_ - 2.0 * triangle_iter->normal_ * ray.direction_ * triangle_iter->normal_, xf::EPS * 10, DBL_MAX);
-			color += dot_cross(triangle_iter->material_.specular_, TraceRay(depth + 1, reflection));
+			color += dot_cross(triangle_iter->material_.mirror_coefficient_, TraceRay(depth + 1, reflection));
 		}
 	}
 	else if(SPHERE == intersection_type)
 	{
 		// 环境光+自发光
-		color = sphere_iter->ambient_ + sphere_iter->material_.emission_;
+		color = sphere_iter->material_.ambient_ + sphere_iter->material_.emission_;
 		// 计算交点位置
 		Vector intersection_point = ray.origin_ + ray.direction_ * min_distance;
 		// 计算交点法向
@@ -148,13 +149,13 @@ static Vector TraceRay(int depth, const Ray &ray)
 		Vector original_point = sphere_iter->inv_transform_mat_ * intersection_point;
 		Vector original_normal = (original_point - sphere_iter->center_).Normalize();
 		Vector normal = sphere_iter->inv_transform_mat_.GetTranspose().TransformDirection(original_normal).Normalize();
-		// 计算漫射光与镜面光
+		// 计算直接光照
 		color += ComputeLight(ray.origin_, intersection_point, normal, sphere_iter->material_);
 		// 计算反射光
-		if(sphere_iter->material_.specular_.Length() > DBL_MIN)
+		if(sphere_iter->material_.mirror_coefficient_.Length() > DBL_MIN)
 		{
 			Ray reflection(intersection_point, ray.direction_ - 2.0 * normal * ray.direction_ * normal, xf::EPS * 10, DBL_MAX);
-			color += dot_cross(sphere_iter->material_.specular_, TraceRay(depth + 1, reflection));
+			color += dot_cross(sphere_iter->material_.mirror_coefficient_, TraceRay(depth + 1, reflection));
 		}
 	}
 	return color;
