@@ -132,10 +132,25 @@ static Vector TraceRay(int depth, const Ray &ray)
 		// 计算直接光照
 		color += ComputeLight(ray.origin_, intersection_point, triangle_iter->normal_, triangle_iter->material_);
 		// 计算反射光
+		Vector reflection_direction = ray.direction_ - 2.0 * triangle_iter->normal_ * ray.direction_ * triangle_iter->normal_;
 		if(triangle_iter->material_.mirror_coefficient_.Length() > DBL_MIN)
 		{
-			Ray reflection(intersection_point, ray.direction_ - 2.0 * triangle_iter->normal_ * ray.direction_ * triangle_iter->normal_, xf::EPS * 10, DBL_MAX);
+			Ray reflection(intersection_point, reflection_direction, xf::EPS * 10, DBL_MAX);
 			color += dot_cross(triangle_iter->material_.mirror_coefficient_, TraceRay(depth + 1, reflection));
+		}
+		// 渗色光
+		if(0 == depth)
+		{
+			for(int i = 0; i < 10; ++i)
+			{
+				Vector bleeding_coefficient(0.02, 0.02, 0.02);
+				Vector arbitrary_shift((double)rand() / (double)RAND_MAX - 0.5, (double)rand() / (double)RAND_MAX - 0.5, (double)rand() / (double)RAND_MAX - 0.5);
+				//Vector arbitrary_shift((double)rand() / (double)RAND_MAX / 2.0 - 0.25 , (double)rand() / (double)RAND_MAX / 2.0 - 0.25, (double)rand() / (double)RAND_MAX / 2.0 - 0.25);
+				Vector bleeding_direction = (reflection_direction + arbitrary_shift).Normalize();
+				double attenuation = cos(reflection_direction, bleeding_direction);
+				Ray bleeding(intersection_point, bleeding_direction, xf::EPS * 10, 0.5);
+				color += dot_cross(attenuation * bleeding_coefficient, TraceRay(G_MAXDEPTH, bleeding));
+			}
 		}
 	}
 	else if(SPHERE == intersection_type)
@@ -152,10 +167,25 @@ static Vector TraceRay(int depth, const Ray &ray)
 		// 计算直接光照
 		color += ComputeLight(ray.origin_, intersection_point, normal, sphere_iter->material_);
 		// 计算反射光
+		Vector reflection_direction = ray.direction_ - 2.0 * normal * ray.direction_ * normal;
 		if(sphere_iter->material_.mirror_coefficient_.Length() > DBL_MIN)
 		{
-			Ray reflection(intersection_point, ray.direction_ - 2.0 * normal * ray.direction_ * normal, xf::EPS * 10, DBL_MAX);
+			Ray reflection(intersection_point, reflection_direction, xf::EPS * 10, DBL_MAX);
 			color += dot_cross(sphere_iter->material_.mirror_coefficient_, TraceRay(depth + 1, reflection));
+		}
+		// 渗色光
+		if(0 == depth)
+		{
+			for(int i = 0; i < 10; ++i)
+			{
+				Vector bleeding_coefficient(0.02, 0.02, 0.02);
+				Vector arbitrary_shift((double)rand() / (double)RAND_MAX - 0.5, (double)rand() / (double)RAND_MAX - 0.5, (double)rand() / (double)RAND_MAX - 0.5);
+				//Vector arbitrary_shift((double)rand() / (double)RAND_MAX / 2.0 - 0.25 , (double)rand() / (double)RAND_MAX / 2.0 - 0.25, (double)rand() / (double)RAND_MAX / 2.0 - 0.25);
+				Vector bleeding_direction = (reflection_direction + arbitrary_shift).Normalize();
+				double attenuation = cos(reflection_direction, bleeding_direction);
+				Ray bleeding(intersection_point, bleeding_direction, xf::EPS * 10, 0.5);
+				color += dot_cross(attenuation * bleeding_coefficient, TraceRay(G_MAXDEPTH, bleeding));
+			}
 		}
 	}
 	return color;

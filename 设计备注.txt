@@ -18,3 +18,6 @@
 还是参数化的好。通过指令确定行为。 DirectionalUniverseOn与DirectionalUniverseOff<默认>
 
 8. 设置镜面反射系数(mirror r g b)。并设置参数(IndependentMirrorOn与IndependentMirrorOff<默认>)，表示镜面反射系数是否要与高光系数共用一个参数。
+
+10. 渗色的实现：对光线的交点，生成一个随机的方向偏移，将偏移量加到光线的反射方向上，计算该偏移反射光线的颜色，乘以一个自适应的系数（与偏移角的余弦成反比），加在交点颜色上。
+问题在于反射光线的长度，设为DBL_MAX会影响效率，设一个固定值，则这个固定值实际上是依赖于场景尺寸的。
