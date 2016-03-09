@@ -8,12 +8,13 @@
 //	return sphere;
 //}
 
-Triangle Transform(const xf::Matrix &transform_mat, Triangle triangle)
+Triangle& Transform(const xf::Matrix &transform_mat, Triangle &triangle)
 {
-	triangle.v1_ = transform_mat * triangle.v1_;
-	triangle.v2_ = transform_mat * triangle.v2_;
-	triangle.v3_ = transform_mat * triangle.v3_;
+	triangle.va_ = transform_mat * triangle.va_;
+	triangle.vb_ = transform_mat * triangle.vb_;
+	triangle.vc_ = transform_mat * triangle.vc_;
 	triangle.normal_ = transform_mat.GetTranspose().GetInverse().TransformDirection(triangle.normal_).Normalize();
+	triangle.FormAssistVector();
 	return triangle;
 }
 
@@ -46,9 +47,8 @@ Matrix ScaleMatrix(const Vector &scale_vector)
 	return ret_mat;
 }
 
-Matrix RotateMatrix(const Vector vec, double degrees)
+Matrix RotateMatrix(Vector direction, double degrees)
 {
-	Vector direction = vec;
 	direction.Normalize();
 	double  data1[9] = {
 		direction.x_ * direction.x_, direction.x_ * direction.y_, direction.x_ * direction.z_,

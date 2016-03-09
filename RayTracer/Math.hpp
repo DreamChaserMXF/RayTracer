@@ -44,13 +44,13 @@ namespace xf
 		return degrees / 180.0 * G_PI;
 	}
 
-	static Vector cross(const Vector &_Left, const Vector &_Right)
+	static Vector cross_product(const Vector &_Left, const Vector &_Right)
 	{
 		return Vector(_Left.y_ * _Right.z_ - _Left.z_ * _Right.y_,
 						_Left.z_ * _Right.x_ - _Left.x_ * _Right.z_, 
 						_Left.x_ * _Right.y_ - _Left.y_ * _Right.x_);
 	}
-	static Vector dot_cross(const Vector &_Left, const Vector &_Right)
+	static Vector scale_product(const Vector &_Left, const Vector &_Right)
 	{
 		return Vector(_Left.x_ * _Right.x_, 
 					  _Left.y_ * _Right.y_,

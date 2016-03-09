@@ -50,7 +50,7 @@ static Vector ComputeLight(const Vector &eye, const Vector &vertex, const Vector
 				Ray light_ray(vertex, light_direction, xf::EPS * 10, distance);	// imp！ EPS而不是0，如果tmin为0的话，那么，起始点就一定会与得到该交点的那个三角形相交
 				if(IsVisible(light_ray))	// 可见
 				{
-					Vector point_color = dot_cross(c_iter->color_ / (G_ATTENUATION.x_ + G_ATTENUATION.y_ * distance + G_ATTENUATION.z_ * distance * distance),	// 衰减系数
+					Vector point_color = scale_product(c_iter->color_ / (G_ATTENUATION.x_ + G_ATTENUATION.y_ * distance + G_ATTENUATION.z_ * distance * distance),	// 衰减系数
 								(material.diffuse_ 
 								* xf::max(normal * light_direction, 0.0))		                               // 漫射光
 							+ (material.specular_ 
@@ -73,7 +73,7 @@ static Vector ComputeLight(const Vector &eye, const Vector &vertex, const Vector
 			Ray light_ray(vertex, light_direction, xf::EPS * 10, DBL_MAX);	// imp！ EPS而不是0，如果tmin为0的话，那么，起始点就一定会与得到该交点的那个三角形相交
 			if(G_DIRECTIONAL_UNIVERSE || IsVisible(light_ray))	// 可见
 			{
-				Vector directional_color = dot_cross(c_iter->color_,
+				Vector directional_color = scale_product(c_iter->color_,
 							(material.diffuse_ 
 							* xf::max(normal * light_direction, 0.0))	// 漫射光
 						+ (material.specular_ 
@@ -136,7 +136,7 @@ static Vector TraceRay(int depth, const Ray &ray)
 		if(triangle_iter->material_.mirror_coefficient_.Length() > DBL_MIN)
 		{
 			Ray reflection(intersection_point, reflection_direction, xf::EPS * 10, DBL_MAX);
-			color += dot_cross(triangle_iter->material_.mirror_coefficient_, TraceRay(depth + 1, reflection));
+			color += scale_product(triangle_iter->material_.mirror_coefficient_, TraceRay(depth + 1, reflection));
 		}
 		// 渗色光
 		if(0 == depth)
@@ -149,7 +149,7 @@ static Vector TraceRay(int depth, const Ray &ray)
 				Vector bleeding_direction = (reflection_direction + arbitrary_shift).Normalize();
 				double attenuation = cos(reflection_direction, bleeding_direction);
 				Ray bleeding(intersection_point, bleeding_direction, xf::EPS * 10, 0.5);
-				color += dot_cross(attenuation * bleeding_coefficient, TraceRay(G_MAXDEPTH, bleeding));
+				color += scale_product(attenuation * bleeding_coefficient, TraceRay(G_MAXDEPTH, bleeding));
 			}
 		}
 	}
@@ -171,7 +171,7 @@ static Vector TraceRay(int depth, const Ray &ray)
 		if(sphere_iter->material_.mirror_coefficient_.Length() > DBL_MIN)
 		{
 			Ray reflection(intersection_point, reflection_direction, xf::EPS * 10, DBL_MAX);
-			color += dot_cross(sphere_iter->material_.mirror_coefficient_, TraceRay(depth + 1, reflection));
+			color += scale_product(sphere_iter->material_.mirror_coefficient_, TraceRay(depth + 1, reflection));
 		}
 		// 渗色光
 		if(0 == depth)
@@ -184,7 +184,7 @@ static Vector TraceRay(int depth, const Ray &ray)
 				Vector bleeding_direction = (reflection_direction + arbitrary_shift).Normalize();
 				double attenuation = cos(reflection_direction, bleeding_direction);
 				Ray bleeding(intersection_point, bleeding_direction, xf::EPS * 10, 0.5);
-				color += dot_cross(attenuation * bleeding_coefficient, TraceRay(G_MAXDEPTH, bleeding));
+				color += scale_product(attenuation * bleeding_coefficient, TraceRay(G_MAXDEPTH, bleeding));
 			}
 		}
 	}
@@ -195,8 +195,8 @@ BYTE* Render()
 {
 	// 计算出相机坐标系三个坐标轴的表示矩阵mRotate
 	Vector w = (G_CAM_LOOKFROM - G_CAM_LOOKAT).Normalize();
-	Vector u = cross(G_CAM_UP, w).Normalize();
-	Vector v = cross(w, u);
+	Vector u = cross_product(G_CAM_UP, w).Normalize();
+	Vector v = cross_product(w, u);
 	Matrix mRotate(4);
 	// 这里的行列千万别搞反了
 	mRotate[0][0] = u.x_;

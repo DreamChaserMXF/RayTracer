@@ -71,13 +71,12 @@ void ContentParse(const string &scene_file, ostream &out)
 		else if("tri" == command)
 		{
 			buffer >> v1 >> v2 >> v3;
-			triangle.v1_ = vertices.at(v1);
-			triangle.v2_ = vertices.at(v2);
-			triangle.v3_ = vertices.at(v3);
+			triangle.va_ = vertices.at(v1);
+			triangle.vb_ = vertices.at(v2);
+			triangle.vc_ = vertices.at(v3);
 			// 求法向量
-			triangle.normal_ = xf::cross(vertices.at(v2) - vertices.at(v1), vertices.at(v3) - vertices.at(v2)).Normalize();
+			triangle.normal_ = xf::cross_product(vertices.at(v2) - vertices.at(v1), vertices.at(v3) - vertices.at(v2)).Normalize();
 			triangle.material_ = material;
-			//G_TRIANGLE_LIST.push_back(triangle);
 			G_TRIANGLE_LIST.push_back(Transform(G_CUR_TRANSFORM_MATRIX, triangle));
 		}
 		else if("vertex" == command)
@@ -214,6 +213,7 @@ void ContentParse(const string &scene_file, ostream &out)
 			assert(false);
 		}
 	}
+
 #ifdef _DEBUG
 	cout << "\n\tprint parameter...";
 	// GLOBAL TERM
@@ -263,9 +263,9 @@ void ContentParse(const string &scene_file, ostream &out)
 		c_iter != G_TRIANGLE_LIST.end(); ++c_iter)
 	{
 		out << distance(G_TRIANGLE_LIST.cbegin(), c_iter) << ":" << '\t'
-			 << "(" << c_iter->v1_.x_ << ", " << c_iter->v1_.y_ << ", " << c_iter->v1_.z_ << "), "
-			 << "(" << c_iter->v2_.x_ << ", " << c_iter->v2_.y_ << ", " << c_iter->v2_.z_ << "), "
-			 << "(" << c_iter->v3_.x_ << ", " << c_iter->v3_.y_ << ", " << c_iter->v3_.z_ << "), "<< '\n'
+			 << "(" << c_iter->va_.x_ << ", " << c_iter->va_.y_ << ", " << c_iter->va_.z_ << "), "
+			 << "(" << c_iter->vb_.x_ << ", " << c_iter->vb_.y_ << ", " << c_iter->vb_.z_ << "), "
+			 << "(" << c_iter->vc_.x_ << ", " << c_iter->vc_.y_ << ", " << c_iter->vc_.z_ << "), "<< '\n'
 			 << "ambient: " << c_iter->material_.ambient_.r_ << ", " << c_iter->material_.ambient_.g_ << ", " << c_iter->material_.ambient_.b_ << '\n'
 			 << "material:"   << '\n'
 			 << "\tdiffuse_: "   << c_iter->material_.diffuse_.r_  << ", " << c_iter->material_.diffuse_.g_  << ", " << c_iter->material_.diffuse_.b_  << '\n'

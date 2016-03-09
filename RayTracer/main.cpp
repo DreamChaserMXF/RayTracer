@@ -1,5 +1,5 @@
 #pragma warning(disable:4996)
-
+#include <ctime>
 #include <iostream>
 #include "GlobalTerm.h"
 
@@ -60,7 +60,9 @@ static void BatchRender()
 
 int main()
 {
+	time_t cur = time(NULL);
 	RenderOneScene();
+	cout << time(NULL) - cur << "s" << endl;;
 	//BatchRender();
 	return 0;
 }

@@ -129,7 +129,7 @@ namespace xf
 
 		Vector& operator /=(double factor)
 		{
-			assert(factor > DBL_MIN);
+			assert(abs(factor) > DBL_MIN);
 			x_ /= factor;
 			y_ /= factor;
 			z_ /= factor;
@@ -152,7 +152,7 @@ namespace xf
 	}
 	static Vector operator /(double numerator, Vector vec)
 	{
-		assert(vec.x_ > DBL_MIN && vec.y_ > DBL_MIN && vec.z_ > DBL_MIN);
+		assert(abs(vec.x_) > DBL_MIN && abs(vec.y_) > DBL_MIN && abs(vec.z_) > DBL_MIN);
 		return Vector(numerator / vec.x_, numerator / vec.y_, numerator / vec.z_);
 	}
 }
