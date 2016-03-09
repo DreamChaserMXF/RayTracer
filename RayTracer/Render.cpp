@@ -173,6 +173,7 @@ static Vector TraceRay(int depth, const Ray &ray)
 			Ray reflection(intersection_point, reflection_direction, xf::EPS * 10, DBL_MAX);
 			color += scale_product(sphere_iter->material_.mirror_coefficient_, TraceRay(depth + 1, reflection));
 		}
+		//double weight = 1.0;	// 归一化权重的效果不明显
 		// 渗色光
 		if(0 == depth)
 		{
@@ -185,8 +186,10 @@ static Vector TraceRay(int depth, const Ray &ray)
 				double attenuation = cos(reflection_direction, bleeding_direction);
 				Ray bleeding(intersection_point, bleeding_direction, xf::EPS * 10, 0.5);
 				color += scale_product(attenuation * bleeding_coefficient, TraceRay(G_MAXDEPTH, bleeding));
+				//weight += attenuation * 0.02;
 			}
 		}
+		//color /= weight;
 	}
 	return color;
 }
