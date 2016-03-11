@@ -2,8 +2,9 @@
 #define TRANSFORM_H
 
 #include "Primitive.h"
-#include "Matrix.hpp"
+#include "Matrix.h"
 using xf::Matrix;
+using xf::Vector;
 
 //Sphere Transform(const xf::Matrix &transform_mat, Sphere sphere);
 
@@ -15,7 +16,8 @@ Matrix TranslateMatrix(const Vector &translate_vector);
 
 Matrix ScaleMatrix(const Vector &scale_vector);
 
-Matrix RotateMatrix(Vector direction, double degrees);
+Matrix RotateMatrixD(Vector direction, double degrees);
+Matrix RotateMatrixR(Vector direction, double radians);
 
 #endif
 

@@ -22,10 +22,11 @@ const char* scene_files[] = {
 /* 11 */	 ".\\hw3-submissionscenes\\scene4-specular.test",
 /* 12 */	 ".\\hw3-submissionscenes\\scene5.test",	// thousand balls
 /* 13 */	 ".\\hw3-submissionscenes\\scene6.test",	// cornell box
-/* 14 */	 ".\\hw3-submissionscenes\\scene7.test",	// stanford dragon
-/* 15 */	 ".\\testscenes\\scene8.test",	// 3 spheres reflected by a trangle
-/* 16 */	 ".\\testscenes\\scene9.test",	// 5 spheres
-/* 17 */	 ".\\testscenes\\scene10.test",	// 5 ellipses
+/* 14 */	 ".\\hw3-submissionscenes\\scene6_colorbleeding.test",	// cornell box with color bleeding
+/* 15 */	 ".\\hw3-submissionscenes\\scene7.test",	// stanford dragon
+/* 16 */	 ".\\testscenes\\scene8.test",	// 3 spheres reflected by a trangle
+/* 17 */	 ".\\testscenes\\scene9.test",	// 5 spheres
+/* 18 */	 ".\\testscenes\\scene10.test",	// 5 ellipses
 };
 
 static void RenderOneScene()
@@ -60,10 +61,16 @@ static void BatchRender()
 
 int main()
 {
-	time_t cur = time(NULL);
-	RenderOneScene();
-	cout << time(NULL) - cur << "s" << endl;;
-	//BatchRender();
+	try
+	{
+		time_t cur = time(NULL);
+		RenderOneScene();
+		cout << time(NULL) - cur << "s" << endl;;
+		//BatchRender();
+	}catch(const std::exception &e)
+	{
+		cout << e.what() << endl;
+	}
 	return 0;
 }
 

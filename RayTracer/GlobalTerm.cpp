@@ -11,6 +11,7 @@ Vector G_CAM_UP;
 double G_FIELD_OF_VIEW = 0;
 
 bool G_DIRECTIONAL_UNIVERSE = false;
+bool G_COLOR_BLEEDING = false;
 
 list<Light> G_POINTLIGHT_LIST;
 list<Light> G_DIRECTIONALLIGHT_LIST;

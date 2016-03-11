@@ -1,8 +1,8 @@
 #ifndef PRIMITIVE_H
 #define PRIMITIVE_H
 #include <vector>
-#include "Vector.hpp"
-#include "Matrix.hpp"
+#include "Vector.h"
+#include "Matrix.h"
 #include "Material.h"
 
 using xf::Vector;

@@ -13,8 +13,8 @@
 #include <FreeImage.h>
 #include "Primitive.h"
 #include "Material.h"
-#include "Vector.hpp"
-#include "Matrix.hpp"
+#include "Vector.h"
+#include "Matrix.h"
 #include "Transform.h"
 
 using xf::Matrix;
@@ -37,6 +37,7 @@ extern int G_MAXDEPTH;
 extern string G_OUTPUT_FILENAME;
 
 extern bool G_DIRECTIONAL_UNIVERSE;
+extern bool G_COLOR_BLEEDING;
 
 extern Vector G_CAM_LOOKFROM;
 extern Vector G_CAM_LOOKAT;

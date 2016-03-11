@@ -100,7 +100,7 @@ void ContentParse(const string &scene_file, ostream &out)
 		{
 			Vector rotation_vec;
 			buffer >> rotation_vec.x_ >> rotation_vec.y_ >> rotation_vec.z_ >> degrees;
-			Matrix rotation_mat = RotateMatrix(rotation_vec, degrees);
+			Matrix rotation_mat = RotateMatrixD(rotation_vec, degrees);
 #ifdef _DEBUG
 			out << "rotation" << '\n';
 			out << rotation_mat;
@@ -182,6 +182,10 @@ void ContentParse(const string &scene_file, ostream &out)
 				buffer >> material.mirror_coefficient_.r_ >> material.mirror_coefficient_.g_ >> material.mirror_coefficient_.b_;
 			}
 		}
+		else if("refraction" == command)
+		{
+			buffer >> material.refraction_coefficient_.r_ >> material.refraction_coefficient_.g_ >> material.refraction_coefficient_.b_ >> material.refraction_index_;
+		}
 		else if("maxverts" == command)	// 确定顶点总数
 		{
 			buffer >> verts_num;
@@ -202,6 +206,10 @@ void ContentParse(const string &scene_file, ostream &out)
 		else if("DirectionalUniverseOff" == command)
 		{
 			G_DIRECTIONAL_UNIVERSE = false;
+		}
+		else if("ColorBleeding" == command)
+		{
+			G_COLOR_BLEEDING = true;
 		}
 		else if("maxvertnorms" == command)
 		{

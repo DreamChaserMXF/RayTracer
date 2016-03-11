@@ -3,7 +3,9 @@
 #size 640 480
 size 1280 960
 camera 0 0.3 1 0 0 -1 0 1 0 45
-output scene6.png
+output scene6_ColorBleeding.png
+
+ColorBleeding
 
 maxdepth 5
 
@@ -108,29 +110,15 @@ tri 0 2 3
 popTransform
 
 
-#sphere1
+#sphere
 diffuse 0.7 0.5 0.2
 specular 0.2 0.2 0.2
 mirror 0.2 0.2 0.2
-#refraction 0.5 0.5 0.5 0.9
 pushTransform
 translate 0 -0.7 -1.5
 scale 0.1 0.1 0.1
 sphere 0 0 0 1
 popTransform
-#refraction 0 0 0 1
-
-#sphere transparent
-diffuse 0 0 0
-specular 0.2 0.2 0.2
-mirror 0.2 0.2 0.2
-refraction 0.8 0.8 0.8 0.85
-pushTransform
-translate -0.3 0 -1.0
-scale 0.1 0.1 0.1
-sphere 0 0 0 2
-popTransform
-refraction 0 0 0 1
 
 #sphere2
 diffuse 0.7 0.5 0.2
@@ -156,11 +144,10 @@ popTransform
 diffuse 0.7 0.5 0.2
 specular 0.2 0.2 0.2
 mirror 0.2 0.2 0.2
-#refraction 0.5 0.5 0.5 1.0
 pushTransform
 translate 0.5 -0.5 -2
 scale 0.3 0.6 0.3
-#sphere 0 0 0 1
+sphere 0 0 0 1
 popTransform
 
 #cube

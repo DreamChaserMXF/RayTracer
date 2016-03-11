@@ -77,20 +77,23 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="GlobalTerm.cpp" />
+    <ClCompile Include="Math.cpp" />
+    <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="Parse.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="SavePicture.cpp" />
     <ClCompile Include="Transform.cpp" />
+    <ClCompile Include="Vector.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GlobalTerm.h" />
     <ClInclude Include="Material.h" />
-    <ClInclude Include="Math.hpp" />
-    <ClInclude Include="Matrix.hpp" />
+    <ClInclude Include="Math.h" />
+    <ClInclude Include="Matrix.h" />
     <ClInclude Include="Primitive.h" />
     <ClInclude Include="Transform.h" />
-    <ClInclude Include="Vector.hpp" />
+    <ClInclude Include="Vector.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
