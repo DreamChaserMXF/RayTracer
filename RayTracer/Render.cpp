@@ -16,7 +16,8 @@ static bool IsVisible(const Ray &ray, Vector &refraction_coef)
 		{
 			if(c_iter->material_.refraction_coefficient_.Length() > DBL_MIN)
 			{
-				refraction_coef = scale_product(refraction_coef, c_iter->material_.refraction_coefficient_);
+				// 对球的交，乘的系数要小一些，因为会交两次
+				refraction_coef = scale_product(refraction_coef, c_iter->material_.refraction_coefficient_ + (Vector(1.0, 1.0, 1.0) - c_iter->material_.refraction_coefficient_) / 2.0);
 			}
 			else
 			{
@@ -34,6 +35,7 @@ static bool IsVisible(const Ray &ray, Vector &refraction_coef)
 			if(c_iter->material_.refraction_coefficient_.Length() > DBL_MIN)
 			{
 				refraction_coef = scale_product(refraction_coef, c_iter->material_.refraction_coefficient_);
+				//refraction_coef = scale_product(refraction_coef, c_iter->material_.refraction_coefficient_ + (Vector(1.0, 1.0, 1.0) - c_iter->material_.refraction_coefficient_) / 2.0);
 			}
 			else
 			{
