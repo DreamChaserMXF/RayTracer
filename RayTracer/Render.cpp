@@ -281,18 +281,16 @@ static Vector TraceRay(int depth, const Ray &ray)
 BYTE* Render()
 {
 	// 计算出相机坐标系三个坐标轴的表示矩阵mRotate
-	Vector u, v, w;
-	try
+	Vector w = (G_CAM_LOOKFROM - G_CAM_LOOKAT);
+	Vector u = cross_product(G_CAM_UP, w);
+	if(w.Length() < DBL_MIN
+		|| u.Length() < DBL_MIN)
 	{
-		w = (G_CAM_LOOKFROM - G_CAM_LOOKAT).Normalize();
-		u = cross_product(G_CAM_UP, w).Normalize();
+		throw std::exception("wrong camera and center definition");
 	}
-	catch(const std::bad_cast &e)
-	{
-		cout << e.what() << endl;
-		throw;
-	}
-	v = cross_product(w, u);	// w和u正确，那么v一定也正确
+	w.Normalize();
+	u.Normalize();
+	Vector v = cross_product(w, u);	// w和u正确，那么v一定也正确
 	Matrix mRotate(4);
 	// 这里的行列千万别搞反了
 	mRotate[0][0] = u.x_;

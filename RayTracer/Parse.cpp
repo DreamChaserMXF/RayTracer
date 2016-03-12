@@ -79,7 +79,12 @@ void ContentParse(const string &scene_file, ostream &out)
 			triangle.vb_ = vertices.at(v2);
 			triangle.vc_ = vertices.at(v3);
 			// 求法向量
-			triangle.normal_ = xf::cross_product(vertices.at(v2) - vertices.at(v1), vertices.at(v3) - vertices.at(v2)).Normalize();
+			triangle.normal_ = xf::cross_product(vertices.at(v2) - vertices.at(v1), vertices.at(v3) - vertices.at(v2));
+			if(triangle.normal_.Length() < DBL_MIN)
+			{
+				throw std::exception("wrong triangle definition, two parallels");
+			}
+			triangle.normal_.Normalize();
 			triangle.material_ = material;
 			G_TRIANGLE_LIST.push_back(Transform(G_CUR_TRANSFORM_MATRIX, triangle));
 		}
