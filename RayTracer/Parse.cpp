@@ -1,6 +1,6 @@
 #include "GlobalTerm.h"
 
-// TODO 参数的合法性检验
+// 参数的合法性检验
 void ContentParse(const string &scene_file, ostream &out)
 {
 	string line;
@@ -64,6 +64,10 @@ void ContentParse(const string &scene_file, ostream &out)
 		else if("sphere" == command)
 		{
 			buffer >> sphere.center_.x_ >> sphere.center_.y_ >> sphere.center_.z_ >> sphere.radius_;
+			if(abs(sphere.radius_) < DBL_MIN)
+			{
+				throw std::exception("cannot generate sphere of 0 radius");
+			}
 			sphere.material_ = material;
 			sphere.inv_transform_mat_ = G_CUR_TRANSFORM_MATRIX.GetInverse();
 			G_SPHERE_LIST.push_back(sphere);
@@ -144,7 +148,11 @@ void ContentParse(const string &scene_file, ostream &out)
 		{
 			buffer >> light.origin_.x_ >> light.origin_.y_ >> light.origin_.z_
 				>> light.color_.x_ >> light.color_.y_ >> light.color_.z_;
-			light.origin_ = G_CUR_TRANSFORM_MATRIX.TransformDirection(light.origin_);
+			if(light.origin_.Length() < DBL_MIN)
+			{
+				throw std::exception("directional light should have none zero direction!");
+			}
+			light.origin_ = G_CUR_TRANSFORM_MATRIX.TransformDirection(light.origin_).Normalize();
 			G_DIRECTIONALLIGHT_LIST.push_back(light);
 		}
 		else if("attenuation" == command)
@@ -221,6 +229,8 @@ void ContentParse(const string &scene_file, ostream &out)
 			assert(false);
 		}
 	}
+	
+
 
 #ifdef _DEBUG
 	cout << "\n\tprint parameter...";

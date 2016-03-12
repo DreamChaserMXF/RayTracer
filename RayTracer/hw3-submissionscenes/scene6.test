@@ -126,7 +126,7 @@ specular 0.2 0.2 0.2
 mirror 0.2 0.2 0.2
 refraction 0.8 0.8 0.8 0.85
 pushTransform
-translate -0.3 0 -1.0
+translate -0.3 0 -1.5
 scale 0.1 0.1 0.1
 sphere 0 0 0 2
 popTransform
