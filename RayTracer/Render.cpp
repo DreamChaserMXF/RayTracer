@@ -332,8 +332,9 @@ BYTE* Render()
 	const char* dotclear_str[] = {"\b \b", "\b\b  \b\b", "\b\b\b   \b\b\b"};
 	const char* dot_str[] = {".", "..", "..."};
 	cout << "0%.";
-	// 返回值
+	// 每根光线最终的颜色
 	Vector color;
+	#pragma omp parallel for private(color)
 	for(int i = 0; i < G_HEIGHT; ++i)	// 对图片中的每行（从左下角开始）
 	{
 		// 输出渲染进度
@@ -355,7 +356,9 @@ BYTE* Render()
 			dot_index = (dot_index + 1) % 3;
 			cout << dot_str[dot_index];
 		}
+		
 		// 对行中的每个元素（从左开始）
+		//#pragma omp parallel for
 		for(int j = 0; j < G_WIDTH; ++j)	
 		{
 			//cout << j << ' ';
@@ -389,8 +392,9 @@ BYTE* Render()
 			}
 			//else
 			//{
-				// 不给color赋值，表示color使用上一个颜色的值
-				//color.x_ = color.y_ = color.z_ = 0.0;
+			//	 //不给color赋值，表示color使用上一个颜色的值
+			//	color.x_ = color.y_ = color.z_ = 0.0;
+			//	exit(-1);
 			//}
 			// 存储图片颜色时，需要用BGR的格式
 			// 且需要将双精度的颜色转换为BYTE格式的颜色

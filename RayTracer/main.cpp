@@ -23,17 +23,18 @@ const char* scene_files[] = {
 /* 12 */	 ".\\hw3-submissionscenes\\scene5.test",	// thousand balls
 /* 13 */	 ".\\hw3-submissionscenes\\scene6.test",	// cornell box
 /* 14 */	 ".\\hw3-submissionscenes\\scene6_colorbleeding.test",	// cornell box with color bleeding
-/* 15 */	 ".\\hw3-submissionscenes\\scene7.test",	// stanford dragon
-/* 16 */	 ".\\testscenes\\scene8.test",	// 3 spheres reflected by a trangle
-/* 17 */	 ".\\testscenes\\scene9.test",	// 5 spheres
-/* 18 */	 ".\\testscenes\\scene10.test",	// 5 ellipses
+/* 15 */	 ".\\hw3-submissionscenes\\scene6_multi_lightsource.test",	// cornell box with multi light source
+/* 16 */	 ".\\hw3-submissionscenes\\scene7.test",	// stanford dragon
+/* 17 */	 ".\\testscenes\\scene8.test",	// 3 spheres reflected by a trangle
+/* 18 */	 ".\\testscenes\\scene9.test",	// 5 spheres
+/* 19 */	 ".\\testscenes\\scene10.test",	// 5 ellipses
 };
 
 static void RenderOneScene()
 {
 	ofstream out("output.txt");
 	cout << "parsing: ";
-	ContentParse(scene_files[13], out);
+	ContentParse(scene_files[12], out);
 	//cout << G_CAM_LOOKFROM.z_ << endl;
 	cout << "\nray tracing:" << endl;
 	BYTE* pixels = Render();
