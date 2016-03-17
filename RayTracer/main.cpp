@@ -34,7 +34,7 @@ static void RenderOneScene()
 {
 	ofstream out("output.txt");
 	cout << "parsing: ";
-	ContentParse(scene_files[12], out);
+	ContentParse(scene_files[15], out);
 	//cout << G_CAM_LOOKFROM.z_ << endl;
 	cout << "\nray tracing:" << endl;
 	BYTE* pixels = Render();

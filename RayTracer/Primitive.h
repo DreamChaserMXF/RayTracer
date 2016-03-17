@@ -57,11 +57,11 @@ public:
 		Vector tmp = origin - center_;
 		double c = tmp * tmp - radius_ * radius_;
 		double delta = b * b - 4.0 * a * c;
-		if(abs(delta) < xf::EPS)	// 直线与球只有一个交点
+		if(abs(delta) < DBL_MIN)	// 直线与球只有一个交点
 		{
 			// 计算交点的参数t
 			t = -b / 2.0 / a;
-			if(t >= ray.tmin_ && t <= ray.tmax_)	// 线段与球相交，且交点更近
+			if(t >= ray.tmin_ && t <= ray.tmax_)	// 线段与球相交
 			{
 				return true;
 			}
@@ -143,7 +143,7 @@ public:
 				// 有角度法、面积法、同向法、重心法等算法，这里采用重心法
 				double alpha = (intersection_point - vc_) * v1_;
 				double beta = (intersection_point - vc_) * v2_;
-				if(alpha > 0.0 && beta > 0.0 && alpha + beta < 1.0)
+				if(alpha >= 0.0 && beta >= 0.0 && alpha + beta <= 1.0)
 				{
 					return true;
 				}

@@ -1,3 +1,4 @@
+#include <omp.h>
 #include "GlobalTerm.h"
 #include <ctime>
 
@@ -325,38 +326,45 @@ BYTE* Render()
 	BYTE *pixels = new BYTE[G_HEIGHT * G_WIDTH * 3];	// 用TeapotViewing那种方式去计算宽度是行不通的，不知道为什么
 	// 用于计算进度的变量
 	int one_percent = G_HEIGHT / 100;
+    if(one_percent <= 0)
+	{
+		one_percent = 1;
+	}
 	int percentage = 0;
 	time_t current_t = time(NULL);
 	time_t last_t = current_t;
 	int dot_index = 0;
 	const char* dotclear_str[] = {"\b \b", "\b\b  \b\b", "\b\b\b   \b\b\b"};
 	const char* dot_str[] = {".", "..", "..."};
-	cout << "0%.";
+	cout << "                            0%.";
 	// 每根光线最终的颜色
-	Vector color;
-	#pragma omp parallel for private(color)
+//	Vector color;
+	#pragma omp parallel for //private(color)
 	for(int i = 0; i < G_HEIGHT; ++i)	// 对图片中的每行（从左下角开始）
 	{
-		// 输出渲染进度
-		if(0 == i % (one_percent))
-		{
-			percentage = i / one_percent;
-			if(percentage >= 100)
-			{
-				percentage = 99;
-			}
-			cout << "\r                       \r";
-			cout << "\t" << percentage << "%" << dot_str[dot_index];
-		}
-		current_t = time(NULL);
-		if(current_t > last_t)
-		{
-			last_t = current_t;
-			cout << dotclear_str[dot_index];
-			dot_index = (dot_index + 1) % 3;
-			cout << dot_str[dot_index];
-		}
-		
+		Vector color;
+		//if(omp_get_thread_num() == omp_get_num_threads() - 1)
+		//{
+		//	// 输出渲染进度
+		//	if(0 == i % (one_percent))
+		//	{
+		//		percentage = i / one_percent;
+		//		if(percentage >= 100)
+		//		{
+		//			percentage = 99;
+		//		}
+		//		cout << "\r                       \r";
+		//		cout << "\t" << percentage << "%" << dot_str[dot_index];
+		//	}
+		//	current_t = time(NULL);
+		//	if(current_t > last_t)
+		//	{
+		//		last_t = current_t;
+		//		cout << dotclear_str[dot_index];
+		//		dot_index = (dot_index + 1) % 3;
+		//		cout << dot_str[dot_index];
+		//	}
+		//}
 		// 对行中的每个元素（从左开始）
 		//#pragma omp parallel for
 		for(int j = 0; j < G_WIDTH; ++j)	
@@ -390,12 +398,12 @@ BYTE* Render()
 					color.z_ = 1.0;
 				}
 			}
-			//else
-			//{
-			//	 //不给color赋值，表示color使用上一个颜色的值
-			//	color.x_ = color.y_ = color.z_ = 0.0;
-			//	exit(-1);
-			//}
+			else
+			{
+				 //不给color赋值，表示color使用上一个颜色的值
+				color.x_ = color.y_ = color.z_ = 0.0;
+				exit(-1);
+			}
 			// 存储图片颜色时，需要用BGR的格式
 			// 且需要将双精度的颜色转换为BYTE格式的颜色
 			pixels[(i * G_WIDTH + j) * 3 + 0] = static_cast<BYTE>(color.b_ * 255.0);
