@@ -28,13 +28,14 @@ const char* scene_files[] = {
 /* 17 */	 ".\\testscenes\\scene8.test",	// 3 spheres reflected by a trangle
 /* 18 */	 ".\\testscenes\\scene9.test",	// 5 spheres
 /* 19 */	 ".\\testscenes\\scene10.test",	// 5 ellipses
+/* 20 */	 ".\\test.test",	// test
 };
 
 static void RenderOneScene()
 {
 	ofstream out("output.txt");
 	cout << "parsing: ";
-	ContentParse(scene_files[15], out);
+	ContentParse(scene_files[14], out);
 	//cout << G_CAM_LOOKFROM.z_ << endl;
 	cout << "\nray tracing:" << endl;
 	BYTE* pixels = Render();

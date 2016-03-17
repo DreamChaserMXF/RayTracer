@@ -212,6 +212,7 @@ static Vector TraceRay(int depth, const Ray &ray)
 			if(ray.direction_ * normal < 0.0)
 			{
 				Vector axis = cross_product(normal, ray.direction_);
+				double incident_angle = asin(axis.Length());
 				double refraction_angle = asin(axis.Length() / sphere_iter->material_.refraction_index_);
 				if(refraction_angle < xf::PI / 2.0)
 				{
@@ -369,6 +370,21 @@ BYTE* Render()
 		//#pragma omp parallel for
 		for(int j = 0; j < G_WIDTH; ++j)	
 		{
+			//if(237 != i || 167 != j)
+			//if(i < 164 || i > 295 || j < 155 || j > 291)
+			//{
+			//	pixels[(i * G_WIDTH + j) * 3 + 0] = 255;
+			//	pixels[(i * G_WIDTH + j) * 3 + 1] = 255;
+			//	pixels[(i * G_WIDTH + j) * 3 + 2] = 255;
+			//	continue;
+			//}
+			//if(229 != i || 169 != j && 168 != j)
+			//{
+			//	pixels[(i * G_WIDTH + j) * 3 + 0] = 255;
+			//	pixels[(i * G_WIDTH + j) * 3 + 1] = 255;
+			//	pixels[(i * G_WIDTH + j) * 3 + 2] = 255;
+			//	continue;
+			//}
 			//cout << j << ' ';
 			// 求出点(i,j)在相机坐标系的位置
 			//Vector position_in_cam((j - G_WIDTH / 2.0 + 0.5) * tan(xf::radians(G_FIELD_OF_VIEW / 2.0)) / (G_HEIGHT / 2.0), (i - G_HEIGHT / 2.0 + 0.5) * tan(xf::radians(G_FIELD_OF_VIEW / 2.0)) / (G_HEIGHT / 2.0), -1.0);	// 原算式
