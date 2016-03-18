@@ -337,19 +337,50 @@ BYTE* Render()
 	int dot_index = 0;
 	const char* dotclear_str[] = {"\b \b", "\b\b  \b\b", "\b\b\b   \b\b\b"};
 	const char* dot_str[] = {".", "..", "..."};
-	cout << "                            0%.";
+	cout << "\t0%.";
 	// 每根光线最终的颜色
-//	Vector color;
-	#pragma omp parallel for //private(color)
+	int rows = 0;
+	#pragma omp parallel for// private(first_thread)
 	for(int i = 0; i < G_HEIGHT; ++i)	// 对图片中的每行（从左下角开始）
 	{
 		Vector color;
-		//if(omp_get_thread_num() == omp_get_num_threads() - 1)
+#pragma omp atomic
+		++rows;
+
+		// 输出渲染进度
+		if(0 == rows % (one_percent))
+		{
+			percentage = rows / one_percent;
+			if(percentage >= 100)
+			{
+				percentage = 99;
+			}
+			cout << "\r                       \r";
+			cout << "\t" << percentage << "%" << dot_str[dot_index];
+		}
+		else
+		{
+			current_t = time(NULL);
+			if(current_t > last_t)
+			{
+				last_t = current_t;
+				cout << dotclear_str[dot_index];
+				dot_index = (dot_index + 1) % 3;
+				cout << dot_str[dot_index];
+			}
+		}
+		
+		//if(0 == i)
+		//{
+		//	first_thread = true;
+		//	num_threads = omp_get_num_threads();
+		//}
+		//if(first_thread)
 		//{
 		//	// 输出渲染进度
 		//	if(0 == i % (one_percent))
 		//	{
-		//		percentage = i / one_percent;
+		//		percentage = num_threads * i / one_percent;
 		//		if(percentage >= 100)
 		//		{
 		//			percentage = 99;
@@ -357,19 +388,21 @@ BYTE* Render()
 		//		cout << "\r                       \r";
 		//		cout << "\t" << percentage << "%" << dot_str[dot_index];
 		//	}
-		//	current_t = time(NULL);
-		//	if(current_t > last_t)
-		//	{
-		//		last_t = current_t;
-		//		cout << dotclear_str[dot_index];
-		//		dot_index = (dot_index + 1) % 3;
-		//		cout << dot_str[dot_index];
-		//	}
 		//}
+		//current_t = time(NULL);
+		//if(current_t > last_t)
+		//{
+		//	last_t = current_t;
+		//	cout << dotclear_str[dot_index];
+		//	dot_index = (dot_index + 1) % 3;
+		//	cout << dot_str[dot_index];
+		//}
+
 		// 对行中的每个元素（从左开始）
 		//#pragma omp parallel for
 		for(int j = 0; j < G_WIDTH; ++j)	
 		{
+			// 调试用
 			//if(237 != i || 167 != j)
 			//if(i < 164 || i > 295 || j < 155 || j > 291)
 			//{
