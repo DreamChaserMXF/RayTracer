@@ -9,7 +9,7 @@ using xf::Vector;
 using xf::Matrix;
 using std::vector;
 
-enum Primitive {NONE, SPHERE, TRIANGLE};
+enum PrimitiveType {NONE, SPHERE, TRIANGLE};
 
 class Light
 {
@@ -36,17 +36,26 @@ public:
 	double tmax_;
 };
 
-
-// 球的半径用向量存储，因为可能会在三个维度上进行缩放
-class Sphere
+class Primitive
 {
 public:
-	Sphere() : center_(), radius_(0.0), inv_transform_mat_(4), material_()
+	Primitive(){}
+	virtual bool IntersectTest(const Ray &ray, double &t) const = 0;
+	virtual Vector GetNormal(const Vector& intersection_pt) const = 0;
+
+	Material material_;
+};
+
+
+class Sphere : public Primitive
+{
+public:
+	Sphere() : center_(), radius_(0.0), inv_transform_mat_(4)
 	{
 		;
 	}
 
-	bool IntersectTest(const Ray &ray, double &t) const
+	virtual bool IntersectTest(const Ray &ray, double &t) const
 	{
 		// 把视点和方向变换回去
 		Vector origin = inv_transform_mat_ * ray.origin_;
@@ -86,15 +95,23 @@ public:
 		return false;
 	}
 
+	virtual Vector GetNormal(const Vector& intersection_pt) const
+	{
+		Vector original_point = inv_transform_mat_ * intersection_pt;
+		Vector original_normal = (original_point - center_).Normalize();	// parse的时候检查过了，球的半径不可能为0，故一定不会有异常
+		Vector normal = inv_transform_mat_.GetTranspose().TransformDirection(original_normal).Normalize();	// 方向变换之后，也一定不会为0向量
+		return normal;
+	}
+
 	Vector center_;
 	double radius_;
 	Matrix inv_transform_mat_;
-	Material material_;
+	
 };
-class Triangle
+class Triangle : public Primitive
 {
 public:
-	Triangle() : va_(), vb_(), vc_(), is_const_normal_(true), normal_(), material_(), v1_(), v2_()
+	Triangle() : va_(), vb_(), vc_(), is_const_normal_(true), normal_(), v1_(), v2_()
 	{
 		
 	}
@@ -112,7 +129,7 @@ public:
 	}
 
 
-	bool IntersectTest(const Ray &ray, double &t) const
+	virtual bool IntersectTest(const Ray &ray, double &t) const
 	{
 		// 先判断直线的方向与三角形是否共面
 		double cos_angle = ray.direction_ * normal_;
@@ -140,7 +157,8 @@ public:
 				//	return true;
 				//}
 
-				// 有角度法、面积法、同向法、重心法等算法，这里采用重心法
+				// 有角度法、面积法、同向法、重心法等算法，这里采用重心法，即推算交点用ABC点所表示的系数，求它们是否大于0
+				// 见 http://www.tuicool.com/articles/rUrMJvi
 				double alpha = (intersection_point - vc_) * v1_;
 				double beta = (intersection_point - vc_) * v2_;
 				if(alpha >= 0.0 && beta >= 0.0 && alpha + beta <= 1.0)
@@ -151,12 +169,17 @@ public:
 		}
 		return false;
 	}
+
+	virtual Vector GetNormal(const Vector& intersection_pt) const
+	{
+		return normal_;
+	}
+
 	Vector va_;
 	Vector vb_;
 	Vector vc_;
 	bool is_const_normal_;
 	Vector normal_;
-	Material material_;
 
 	// 辅助变量
 	Vector v1_;

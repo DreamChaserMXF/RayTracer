@@ -48,23 +48,24 @@ Matrix ScaleMatrix(const Vector &scale_vector)
 
 Matrix RotateMatrixD(Vector direction, double degrees)
 {
-	direction.Normalize();
-	double  data1[9] = {
-		direction.x_ * direction.x_, direction.x_ * direction.y_, direction.x_ * direction.z_,
-		direction.y_ * direction.x_, direction.y_ * direction.y_, direction.y_ * direction.z_,
-		direction.z_ * direction.x_, direction.z_ * direction.y_, direction.z_ * direction.z_
-				};
-	Matrix mProjection(3, 3, data1);
-	Matrix mIdentity = IdentityMatrix(3);
-	double  data2[9] = {
-		0.0f, -direction.z_, direction.y_,
-		direction.z_, 0.0f, -direction.x_,
-		-direction.y_, direction.x_, 0.0f
-	};	// 行主序！！
-	Matrix mCross(3, 3, data2);
-	const double radians = xf::radians(degrees);
-	Matrix ret_mat = (1 - cos(radians)) * mProjection + cos(radians) * mIdentity + sin(radians) * mCross;
-	return ret_mat.GetHomogeneousMatrix();
+	return RotateMatrixR(direction, xf::radians(degrees));	// ?? 这样也可以吧？不知道为什么当初写了两个版本。
+	//direction.Normalize();
+	//double  data1[9] = {
+	//	direction.x_ * direction.x_, direction.x_ * direction.y_, direction.x_ * direction.z_,
+	//	direction.y_ * direction.x_, direction.y_ * direction.y_, direction.y_ * direction.z_,
+	//	direction.z_ * direction.x_, direction.z_ * direction.y_, direction.z_ * direction.z_
+	//			};
+	//Matrix mProjection(3, 3, data1);
+	//Matrix mIdentity = IdentityMatrix(3);
+	//double  data2[9] = {
+	//	0.0f, -direction.z_, direction.y_,
+	//	direction.z_, 0.0f, -direction.x_,
+	//	-direction.y_, direction.x_, 0.0f
+	//};	// 行主序！！
+	//Matrix mCross(3, 3, data2);
+	//const double radians = xf::radians(degrees);
+	//Matrix ret_mat = (1 - cos(radians)) * mProjection + cos(radians) * mIdentity + sin(radians) * mCross;
+	//return ret_mat.GetHomogeneousMatrix();
 }
 
 Matrix RotateMatrixR(Vector direction, double radians)

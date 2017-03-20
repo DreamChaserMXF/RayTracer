@@ -31,14 +31,15 @@ const char* scene_files[] = {
 /* 20 */	 ".\\test.test",	// test
 };
 
-static void RenderOneScene()
+static void SingleRender()
 {
 	ofstream out("output.txt");
 	cout << "parsing: ";
-	ContentParse(scene_files[15], out);
+	ContentParse(scene_files[17], out);
 	//cout << G_CAM_LOOKFROM.z_ << endl;
 	cout << "\nray tracing:" << endl;
 	BYTE* pixels = Render();
+	ReleasePrimitives();
 	SavePicture(pixels, G_OUTPUT_FILENAME);
 	delete[] pixels;
 }
@@ -66,7 +67,7 @@ int main()
 	try
 	{
 		time_t cur = time(NULL);
-		RenderOneScene();
+		SingleRender();
 		cout << time(NULL) - cur << "s" << endl;;
 		//BatchRender();
 	}catch(const std::exception &e)

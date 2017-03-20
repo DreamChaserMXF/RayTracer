@@ -72,4 +72,9 @@
       <Filter>Header Files\Math</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Library Include="FreeImage.lib">
+      <Filter>Resource Files</Filter>
+    </Library>
+  </ItemGroup>
 </Project>

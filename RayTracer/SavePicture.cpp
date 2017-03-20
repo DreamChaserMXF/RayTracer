@@ -1,5 +1,4 @@
 #include "GlobalTerm.h"
-#include <FreeImage.h>
 
 void SavePicture(BYTE* pixels, const string &name)
 {

@@ -3,6 +3,7 @@
 #size 640 480
 #size 1280 960
 size 1920 1440
+#size 1920 1080
 camera 0 0.3 1 0 0 -1 0 1 0 45
 output scene6_MultiLightSource.png
 

@@ -10,7 +10,9 @@
 #include <cassert>
 #include <climits>
 
-#include <FreeImage.h>
+#include "../FreeImage/FreeImage.h"
+//#pragma comment(lib, "D:\\MXFXF\\Project\\C++\\OpenGL\\CG Introduction\\3 RayTracer\\FreeImage\\FreeImage.lib")
+
 #include "Primitive.h"
 #include "Material.h"
 #include "Vector.h"
@@ -48,7 +50,7 @@ extern list<Light> G_POINTLIGHT_LIST;
 extern list<Light> G_DIRECTIONALLIGHT_LIST;
 extern Vector G_ATTENUATION;
 
-
+extern list<Primitive*> G_PRIMITIVE_LIST;
 extern list<Sphere> G_SPHERE_LIST;
 extern list<Triangle> G_TRIANGLE_LIST;
 
@@ -57,6 +59,7 @@ extern Matrix G_CUR_TRANSFORM_MATRIX;
 
 void init();
 void ContentParse(const string &scene_file, ostream &out);
+void ReleasePrimitives();
 BYTE* Render();
 void SavePicture(BYTE* pixels, const string &name);
 

@@ -3,7 +3,6 @@
 #include <ctime>
 
 
-
 static bool IsVisible(const Ray &ray, Vector &refraction_coef)
 {
 	double t = 0.0;
@@ -117,7 +116,6 @@ static Vector ComputeLight(int depth, const Vector &eye, const Vector &vertex, c
 	return color;
 }
 
-
 static Vector TraceRay(int depth, const Ray &ray)
 {
 	if(depth > G_MAXDEPTH)
@@ -125,136 +123,79 @@ static Vector TraceRay(int depth, const Ray &ray)
 		return Vector();
 	}
 	// 求交
-	Primitive intersection_type = NONE;
+	//PrimitiveType intersection_type = NONE;
 	double min_distance = ray.tmax_;
 	double t = 0.0;
-	// 与球求交
-	list<Sphere>::const_iterator sphere_iter;
-	for(list<Sphere>::const_iterator c_iter = G_SPHERE_LIST.begin();
-		c_iter != G_SPHERE_LIST.end(); ++c_iter)
+	// 与图元(三角形或球)求交
+	list<Primitive*>::const_iterator primitive_iter = G_PRIMITIVE_LIST.end();
+	for(list<Primitive*>::const_iterator c_iter = G_PRIMITIVE_LIST.begin();
+		c_iter != G_PRIMITIVE_LIST.end(); ++c_iter)
 	{
-		if(c_iter->IntersectTest(ray, t) && t < min_distance)
+		if((*c_iter)->IntersectTest(ray, t) && t < min_distance)
 		{
 			min_distance = t;
-			intersection_type = SPHERE;
-			sphere_iter = c_iter;
-		}
-	}
-	// 与三角形求交
-	list<Triangle>::const_iterator triangle_iter;
-	for(list<Triangle>::const_iterator c_iter = G_TRIANGLE_LIST.begin();
-		c_iter != G_TRIANGLE_LIST.end(); ++c_iter)
-	{
-		if(c_iter->IntersectTest(ray, t) && t < min_distance)
-		{
-			min_distance = t;
-			intersection_type = TRIANGLE;
-			triangle_iter = c_iter;
+			//intersection_type = typeid(**c_iter) == typeid(Sphere) ? SPHERE : TRIANGLE;
+			primitive_iter = c_iter;
 		}
 	}
 	// 确定颜色
 	Vector color;
 	// 确定最近交点
-	if(TRIANGLE == intersection_type)
+	if(primitive_iter != G_PRIMITIVE_LIST.end())
 	{
 		// 环境光+自发光
-		color = triangle_iter->material_.ambient_ + triangle_iter->material_.emission_;
+		color = (*primitive_iter)->material_.ambient_ + (*primitive_iter)->material_.emission_;
 		// 计算交点位置
 		Vector intersection_point = ray.origin_ + ray.direction_ * min_distance;
+		// 法向
+		Vector normal = (*primitive_iter)->GetNormal(intersection_point);
 		// 计算直接光照
-		color += ComputeLight(depth, ray.origin_, intersection_point, triangle_iter->normal_, triangle_iter->material_);
-		// 计算反射光
-		Vector reflection_direction = ray.direction_ - 2.0 * triangle_iter->normal_ * ray.direction_ * triangle_iter->normal_;
-		if(triangle_iter->material_.mirror_coefficient_.Length() > DBL_MIN)
-		{
-			Ray reflection(intersection_point, reflection_direction, xf::EPS, DBL_MAX);
-			color += scale_product(triangle_iter->material_.mirror_coefficient_, TraceRay(depth + 1, reflection));
-		}
-		// 渗色光
-		//double weight = 1.0;
-		if(G_COLOR_BLEEDING && 0 == depth)
-		{
-			for(int i = 0; i < 10; ++i)
-			{
-				Vector bleeding_coefficient(0.02, 0.02, 0.02);
-				Vector arbitrary_shift((double)rand() / (double)RAND_MAX - 0.5, (double)rand() / (double)RAND_MAX - 0.5, (double)rand() / (double)RAND_MAX - 0.5);
-				//Vector arbitrary_shift((double)rand() / (double)RAND_MAX / 2.0 - 0.25 , (double)rand() / (double)RAND_MAX / 2.0 - 0.25, (double)rand() / (double)RAND_MAX / 2.0 - 0.25);
-				Vector bleeding_direction = (reflection_direction + arbitrary_shift);
-				if(bleeding_direction.Length() > 0)
-				{
-					bleeding_direction.Normalize();
-					double attenuation = cos(reflection_direction, bleeding_direction);
-					Ray bleeding(intersection_point, bleeding_direction, xf::EPS, 0.5);
-					color += scale_product(attenuation * bleeding_coefficient, TraceRay(G_MAXDEPTH, bleeding));
-					//weight += 0.02 * attenuation;
-				}
-			}
-			//color /= weight;
-		}
-	}
-	else if(SPHERE == intersection_type)
-	{
-		// 环境光+自发光
-		color = sphere_iter->material_.ambient_ + sphere_iter->material_.emission_;
-		// 计算交点位置
-		Vector intersection_point = ray.origin_ + ray.direction_ * min_distance;
-		// 计算交点法向
-		// 1. 把交点变换回原位置 2. 求出原位置的法向 3. 把法向变换到最终方向
-		Vector original_point = sphere_iter->inv_transform_mat_ * intersection_point;
-		Vector original_normal = (original_point - sphere_iter->center_).Normalize();	// parse的时候检查过了，球的半径不可能为0，故一定不会有异常
-		Vector normal = sphere_iter->inv_transform_mat_.GetTranspose().TransformDirection(original_normal).Normalize();	// 方向变换之后，也一定不会为0向量
-		// 计算直接光照
-		color += ComputeLight(depth, ray.origin_, intersection_point, normal, sphere_iter->material_);
+		color += ComputeLight(depth, ray.origin_, intersection_point, normal, (*primitive_iter)->material_);
+
 		// 计算折射光
 		Vector mirror_gain;	// 入射角过大带来的全反射现象导致的反射系数增益
-		if(sphere_iter->material_.refraction_coefficient_.Length() > DBL_MIN)
+		if((*primitive_iter)->material_.refraction_coefficient_.Length() > DBL_MIN)
 		{
 			if(ray.direction_ * normal < 0.0)
 			{
 				Vector axis = cross_product(normal, ray.direction_);
 				double incident_angle = asin(axis.Length());
-				double refraction_angle = asin(axis.Length() / sphere_iter->material_.refraction_index_);
+				double refraction_angle = asin(axis.Length() / (*primitive_iter)->material_.refraction_index_);
 				if(refraction_angle < xf::PI / 2.0)
 				{
 					Matrix rotate_mat = RotateMatrixR(axis, xf::PI - refraction_angle);
 					Ray refraction(intersection_point, rotate_mat.TransformDirection(normal), xf::EPS, DBL_MAX);
-					color += scale_product(sphere_iter->material_.refraction_coefficient_, TraceRay(depth + 1, refraction));
+					color += scale_product((*primitive_iter)->material_.refraction_coefficient_, TraceRay(depth + 1, refraction));
 				}
 				else
 				{
-					mirror_gain = sphere_iter->material_.refraction_coefficient_;
+					mirror_gain = (*primitive_iter)->material_.refraction_coefficient_;
 				}
 			}
 			else
 			{
 				Vector axis = cross_product(normal, ray.direction_);
-				double refraction_angle = asin(axis.Length() * sphere_iter->material_.refraction_index_);
+				double refraction_angle = asin(axis.Length() * (*primitive_iter)->material_.refraction_index_);
 				if(refraction_angle < xf::PI / 2.0)
 				{
 					Matrix rotate_mat = RotateMatrixR(axis, refraction_angle);
 					Ray refraction(intersection_point, rotate_mat.TransformDirection(normal), xf::EPS, DBL_MAX);
-					color += scale_product(sphere_iter->material_.refraction_coefficient_, TraceRay(depth + 1, refraction));
+					color += scale_product((*primitive_iter)->material_.refraction_coefficient_, TraceRay(depth + 1, refraction));
 				}
 				else
 				{
-					mirror_gain = sphere_iter->material_.refraction_coefficient_;
+					mirror_gain = (*primitive_iter)->material_.refraction_coefficient_;
 				}
 			}
 		}
 		// 计算反射光
 		Vector reflection_direction = ray.direction_ - 2.0 * normal * ray.direction_ * normal;
-		mirror_gain += sphere_iter->material_.mirror_coefficient_;
+		mirror_gain += (*primitive_iter)->material_.mirror_coefficient_;
 		if(mirror_gain.Length() > DBL_MIN)
 		{
 			Ray reflection(intersection_point, reflection_direction, xf::EPS, DBL_MAX);
 			color += scale_product(mirror_gain, TraceRay(depth + 1, reflection));
 		}
-		//if(sphere_iter->material_.mirror_coefficient_.Length() > DBL_MIN)
-		//{
-		//	Ray reflection(intersection_point, reflection_direction, xf::EPS, DBL_MAX);
-		//	color += scale_product(sphere_iter->material_.mirror_coefficient_, TraceRay(depth + 1, reflection));
-		//}
-
 		// 渗色光
 		//double weight = 1.0;
 		if(G_COLOR_BLEEDING && 0 == depth)
@@ -277,8 +218,177 @@ static Vector TraceRay(int depth, const Ray &ray)
 			//color /= weight;
 		}
 	}
+	else
+	{
+		color.b_ = color.g_ = color.r_ = 0.0;
+	}
 	return color;
 }
+//static Vector TraceRay(int depth, const Ray &ray)
+//{
+//	if(depth > G_MAXDEPTH)
+//	{
+//		return Vector();
+//	}
+//	// 求交
+//	PrimitiveType intersection_type = NONE;
+//	double min_distance = ray.tmax_;
+//	double t = 0.0;
+//	// 与球求交
+//	list<Sphere>::const_iterator sphere_iter;
+//	for(list<Sphere>::const_iterator c_iter = G_SPHERE_LIST.begin();
+//		c_iter != G_SPHERE_LIST.end(); ++c_iter)
+//	{
+//		if(c_iter->IntersectTest(ray, t) && t < min_distance)
+//		{
+//			min_distance = t;
+//			intersection_type = SPHERE;
+//			sphere_iter = c_iter;
+//		}
+//	}
+//	// 与三角形求交
+//	list<Triangle>::const_iterator triangle_iter;
+//	for(list<Triangle>::const_iterator c_iter = G_TRIANGLE_LIST.begin();
+//		c_iter != G_TRIANGLE_LIST.end(); ++c_iter)
+//	{
+//		if(c_iter->IntersectTest(ray, t) && t < min_distance)
+//		{
+//			min_distance = t;
+//			intersection_type = TRIANGLE;
+//			triangle_iter = c_iter;
+//		}
+//	}
+//	// 确定颜色
+//	Vector color;
+//	// 确定最近交点
+//	if(TRIANGLE == intersection_type)
+//	{
+//		// 环境光+自发光
+//		color = triangle_iter->material_.ambient_ + triangle_iter->material_.emission_;
+//		// 计算交点位置
+//		Vector intersection_point = ray.origin_ + ray.direction_ * min_distance;
+//		// 计算直接光照
+//		color += ComputeLight(depth, ray.origin_, intersection_point, triangle_iter->normal_, triangle_iter->material_);
+//		// 计算反射光
+//		Vector reflection_direction = ray.direction_ - 2.0 * triangle_iter->normal_ * ray.direction_ * triangle_iter->normal_;
+//		if(triangle_iter->material_.mirror_coefficient_.Length() > DBL_MIN)
+//		{
+//			Ray reflection(intersection_point, reflection_direction, xf::EPS, DBL_MAX);
+//			color += scale_product(triangle_iter->material_.mirror_coefficient_, TraceRay(depth + 1, reflection));
+//		}
+//		// 渗色光
+//		//double weight = 1.0;
+//		if(G_COLOR_BLEEDING && 0 == depth)
+//		{
+//			for(int i = 0; i < 10; ++i)
+//			{
+//				Vector bleeding_coefficient(0.02, 0.02, 0.02);
+//				Vector arbitrary_shift((double)rand() / (double)RAND_MAX - 0.5, (double)rand() / (double)RAND_MAX - 0.5, (double)rand() / (double)RAND_MAX - 0.5);
+//				//Vector arbitrary_shift((double)rand() / (double)RAND_MAX / 2.0 - 0.25 , (double)rand() / (double)RAND_MAX / 2.0 - 0.25, (double)rand() / (double)RAND_MAX / 2.0 - 0.25);
+//				Vector bleeding_direction = (reflection_direction + arbitrary_shift);
+//				if(bleeding_direction.Length() > 0)
+//				{
+//					bleeding_direction.Normalize();
+//					double attenuation = cos(reflection_direction, bleeding_direction);
+//					Ray bleeding(intersection_point, bleeding_direction, xf::EPS, 0.5);
+//					color += scale_product(attenuation * bleeding_coefficient, TraceRay(G_MAXDEPTH, bleeding));
+//					//weight += 0.02 * attenuation;
+//				}
+//			}
+//			//color /= weight;
+//		}
+//	}
+//	else if(SPHERE == intersection_type)
+//	{
+//		// 环境光+自发光
+//		color = sphere_iter->material_.ambient_ + sphere_iter->material_.emission_;
+//		// 计算交点位置
+//		Vector intersection_point = ray.origin_ + ray.direction_ * min_distance;
+//		// 计算交点法向
+//		// 1. 把交点变换回原位置 2. 求出原位置的法向 3. 把法向变换到最终方向
+//		Vector original_point = sphere_iter->inv_transform_mat_ * intersection_point;
+//		Vector original_normal = (original_point - sphere_iter->center_).Normalize();	// parse的时候检查过了，球的半径不可能为0，故一定不会有异常
+//		Vector normal = sphere_iter->inv_transform_mat_.GetTranspose().TransformDirection(original_normal).Normalize();	// 方向变换之后，也一定不会为0向量
+//		// 计算直接光照
+//		color += ComputeLight(depth, ray.origin_, intersection_point, normal, sphere_iter->material_);
+//		// 计算折射光
+//		Vector mirror_gain;	// 入射角过大带来的全反射现象导致的反射系数增益
+//		if(sphere_iter->material_.refraction_coefficient_.Length() > DBL_MIN)
+//		{
+//			if(ray.direction_ * normal < 0.0)
+//			{
+//				Vector axis = cross_product(normal, ray.direction_);
+//				double incident_angle = asin(axis.Length());
+//				double refraction_angle = asin(axis.Length() / sphere_iter->material_.refraction_index_);
+//				if(refraction_angle < xf::PI / 2.0)
+//				{
+//					Matrix rotate_mat = RotateMatrixR(axis, xf::PI - refraction_angle);
+//					Ray refraction(intersection_point, rotate_mat.TransformDirection(normal), xf::EPS, DBL_MAX);
+//					color += scale_product(sphere_iter->material_.refraction_coefficient_, TraceRay(depth + 1, refraction));
+//				}
+//				else
+//				{
+//					mirror_gain = sphere_iter->material_.refraction_coefficient_;
+//				}
+//			}
+//			else
+//			{
+//				Vector axis = cross_product(normal, ray.direction_);
+//				double refraction_angle = asin(axis.Length() * sphere_iter->material_.refraction_index_);
+//				if(refraction_angle < xf::PI / 2.0)
+//				{
+//					Matrix rotate_mat = RotateMatrixR(axis, refraction_angle);
+//					Ray refraction(intersection_point, rotate_mat.TransformDirection(normal), xf::EPS, DBL_MAX);
+//					color += scale_product(sphere_iter->material_.refraction_coefficient_, TraceRay(depth + 1, refraction));
+//				}
+//				else
+//				{
+//					mirror_gain = sphere_iter->material_.refraction_coefficient_;
+//				}
+//			}
+//		}
+//		// 计算反射光
+//		Vector reflection_direction = ray.direction_ - 2.0 * normal * ray.direction_ * normal;
+//		mirror_gain += sphere_iter->material_.mirror_coefficient_;
+//		if(mirror_gain.Length() > DBL_MIN)
+//		{
+//			Ray reflection(intersection_point, reflection_direction, xf::EPS, DBL_MAX);
+//			color += scale_product(mirror_gain, TraceRay(depth + 1, reflection));
+//		}
+//		//if(sphere_iter->material_.mirror_coefficient_.Length() > DBL_MIN)
+//		//{
+//		//	Ray reflection(intersection_point, reflection_direction, xf::EPS, DBL_MAX);
+//		//	color += scale_product(sphere_iter->material_.mirror_coefficient_, TraceRay(depth + 1, reflection));
+//		//}
+//
+//		// 渗色光
+//		//double weight = 1.0;
+//		if(G_COLOR_BLEEDING && 0 == depth)
+//		{
+//			for(int i = 0; i < 10; ++i)
+//			{
+//				Vector bleeding_coefficient(0.02, 0.02, 0.02);
+//				Vector arbitrary_shift((double)rand() / (double)RAND_MAX - 0.5, (double)rand() / (double)RAND_MAX - 0.5, (double)rand() / (double)RAND_MAX - 0.5);
+//				//Vector arbitrary_shift((double)rand() / (double)RAND_MAX / 2.0 - 0.25 , (double)rand() / (double)RAND_MAX / 2.0 - 0.25, (double)rand() / (double)RAND_MAX / 2.0 - 0.25);
+//				Vector bleeding_direction = (reflection_direction + arbitrary_shift);
+//				if(bleeding_direction.Length() > 0)
+//				{
+//					bleeding_direction.Normalize();
+//					double attenuation = cos(reflection_direction, bleeding_direction);
+//					Ray bleeding(intersection_point, bleeding_direction, xf::EPS, 0.5);
+//					color += scale_product(attenuation * bleeding_coefficient, TraceRay(G_MAXDEPTH, bleeding));
+//					//weight += 0.02 * attenuation;
+//				}
+//			}
+//			//color /= weight;
+//		}
+//	}
+//	else
+//	{
+//		color.b_ = color.g_ = color.r_ = 0.0;
+//	}
+//	return color;
+//}
 
 BYTE* Render()
 {
@@ -449,9 +559,9 @@ BYTE* Render()
 			}
 			else
 			{
-				 //不给color赋值，表示color使用上一个颜色的值
+				 //color为黑色，表示视点离屏幕太近了，什么也看不到
 				color.x_ = color.y_ = color.z_ = 0.0;
-				exit(-1);
+				exit(-1);	// 还是退出好了
 			}
 			// 存储图片颜色时，需要用BGR的格式
 			// 且需要将双精度的颜色转换为BYTE格式的颜色

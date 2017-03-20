@@ -22,8 +22,8 @@ void ContentParse(const string &scene_file, ostream &out)
 	// 辅助变量（免除循环内定义的变量）
 	Vector vec_general;
 	int v1, v2, v3, verts_num;
-	Triangle triangle;
-	Sphere sphere;
+	//Triangle triangle;
+	//Sphere sphere;
 	Light light;
 	double degrees;
 	// 计数变量
@@ -63,30 +63,35 @@ void ContentParse(const string &scene_file, ostream &out)
 		}
 		else if("sphere" == command)
 		{
-			buffer >> sphere.center_.x_ >> sphere.center_.y_ >> sphere.center_.z_ >> sphere.radius_;
-			if(abs(sphere.radius_) < DBL_MIN)
+			Sphere* p_sphere = new Sphere();
+			buffer >> p_sphere->center_.x_ >> p_sphere->center_.y_ >> p_sphere->center_.z_ >> p_sphere->radius_;
+			if(abs(p_sphere->radius_) < DBL_MIN)
 			{
 				throw std::exception("cannot generate sphere of 0 radius");
 			}
-			sphere.material_ = material;
-			sphere.inv_transform_mat_ = G_CUR_TRANSFORM_MATRIX.GetInverse();
-			G_SPHERE_LIST.push_back(sphere);
+			p_sphere->material_ = material;
+			p_sphere->inv_transform_mat_ = G_CUR_TRANSFORM_MATRIX.GetInverse();
+			G_PRIMITIVE_LIST.push_back(p_sphere);
+			//G_SPHERE_LIST.push_back(sphere);
 		}
 		else if("tri" == command)
 		{
 			buffer >> v1 >> v2 >> v3;
-			triangle.va_ = vertices.at(v1);
-			triangle.vb_ = vertices.at(v2);
-			triangle.vc_ = vertices.at(v3);
+			Triangle *p_triangle = new Triangle();
+			p_triangle->va_ = vertices.at(v1);
+			p_triangle->vb_ = vertices.at(v2);
+			p_triangle->vc_ = vertices.at(v3);
 			// 求法向量
-			triangle.normal_ = xf::cross_product(vertices.at(v2) - vertices.at(v1), vertices.at(v3) - vertices.at(v2));
-			if(triangle.normal_.Length() < DBL_MIN)
+			p_triangle->normal_ = xf::cross_product(vertices.at(v2) - vertices.at(v1), vertices.at(v3) - vertices.at(v2));
+			if(p_triangle->normal_.Length() < DBL_MIN)
 			{
 				throw std::exception("wrong triangle definition, two parallels");
 			}
-			triangle.normal_.Normalize();
-			triangle.material_ = material;
-			G_TRIANGLE_LIST.push_back(Transform(G_CUR_TRANSFORM_MATRIX, triangle));
+			p_triangle->normal_.Normalize();
+			p_triangle->material_ = material;
+			Transform(G_CUR_TRANSFORM_MATRIX, *p_triangle);
+			G_PRIMITIVE_LIST.push_back(p_triangle);
+			//G_TRIANGLE_LIST.push_back(Transform(G_CUR_TRANSFORM_MATRIX, triangle));
 		}
 		else if("vertex" == command)
 		{
@@ -297,4 +302,14 @@ void ContentParse(const string &scene_file, ostream &out)
 			 << "\temission_: "  << c_iter->material_.emission_.r_ << ", " << c_iter->material_.emission_.g_ << ", " << c_iter->material_.emission_.b_ << '\n';
 	}
 #endif
+}
+
+
+void ReleasePrimitives()
+{
+	for(list<Primitive*>::const_iterator c_iter = G_PRIMITIVE_LIST.cbegin();
+		c_iter != G_PRIMITIVE_LIST.cend(); ++c_iter)
+	{
+		delete (*c_iter);
+	}
 }

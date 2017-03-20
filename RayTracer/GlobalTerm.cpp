@@ -17,6 +17,7 @@ list<Light> G_POINTLIGHT_LIST;
 list<Light> G_DIRECTIONALLIGHT_LIST;
 Vector G_ATTENUATION(1.0, 0.0, 0.0);
 
+list<Primitive*> G_PRIMITIVE_LIST;
 list<Sphere> G_SPHERE_LIST;
 list<Triangle> G_TRIANGLE_LIST;
 
